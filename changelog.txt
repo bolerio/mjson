@@ -1,0 +1,4 @@
+1.3 Changes:
+
+- Check for null property names in ObjectJson.set
+
