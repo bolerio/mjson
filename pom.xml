@@ -20,12 +20,6 @@
     </license>
   </licenses>
 
-  <scm>
-    <connection>scm:hg:http://repo.sharegov.org/hg/javautils</connection>
-    <developerConnection>scm:hg:http://repo.sharegov.org/hg/javautils</developerConnection>
-    <url>http://repo.sharegov.org/hg/javautils</url>
-  </scm>
-
   <developers>
     <developer>
       <id>boris</id>
