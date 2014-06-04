@@ -32,38 +32,95 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to mJson.</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>mJson is an extremely lightweight Java JSON library with a very concise API. It is implemented entirely in a single class called Json. Unlike other JSON libraries, it focuses on manipulating JSON structures in Java without necessarily mapping them to/from strongly typed Java objects. The main goal is to reduce verbosity and work with JSON in Java as naturally as in JavaScript. Yes, JSON is naturally embedded in JavaScript, so syntactically it could never be as easy in a Java context, but it still doesn't make much sense to have strongly typed JSON elements when the structures are dynamic and untyped to being with. For example in GSON, and pretty much all other libraries, one ends up suffering the verbosity of strong typing, with type casts all over the place, without getting any of the benefits. If you are writing REST services that work directly with JSON and you're not mapping it to Java, i.e. if you're using JSON as structured data that both client and server can work with, mJson would be a better choice. If you need more control and would like to enchance it with automatic beans to/from Json mappings or you would like to change how Json elements are represented internally, mJson allows you to do that as well!</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Get Id</h3>
+
+<p>
+It is in Maven central, so add this to your pom.xml if you are using Maven:
+</p>
+
+<pre><code><dependency>
+  &lt;groupId&gt;org.sharegov&lt;/groupId&gt;
+  &lt;artifactId&gt;mjson&lt;/artifactId&gt;
+  &lt;version&gt;1.2&lt;/version&gt;
+</dependency>
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>You can also simply get the Json.java from the GitHub project and include it in your project. Or download a jar build from:</p>
 
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Javadoc</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>To start using this library, you only need to glance at the example and method description on the Javadoc:
+</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>
+<a href="apidocs/index.html">Json API</a>
+</p>
 
 <h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Background</h3>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-    </div>
+<p>
+JSON (JavaScript Object Notation) is a lightweight data-interchange format. You knew that already. If not, continue reading on <a href="http://www.json.org">http://www.json.org</a>.
+</p>
+
+<p>
+It is supposed to be about simplicity and clarity. Something minimal, intuitive, direct. Yet, I could not find a Java library to work with it in this way (well, in 2011 at least). The GSON project is pretty solid and comprehensive, but while working with REST services and coding some JavaScript with JSON in between, I got frustrated of having to be so verbose on the server-side while on the client-side manipulating those JSON structures is so easy. The others like Jackson, Jettison etc. seemed even worse. So, after a lot of hesitation and looking over all Java/JSON I could find (well, mostly I examined all the libraries listed on json.org), I wrote yet another Java JSON library. It was developed in the context of the <a href="https://github.com/sharegov/opencirm">OpenCiRM</a> project, but because it is rather independent from the rest of the project, I separated it. And because it has a chance of meeting other programmers' tastes, I decided to publish it.
+</p>
+
+<p>
+The library is called mjson for "minimal JSON". The source code is a single Java file (also included in the distribution jar). Some of it was ripped off from other projects and credit and licensing notices are included in the appropriate places. The license is Apache 2.0.
+</p>
+
+<h3>
+<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Design</h3>
+
+<p>
+The goal of this library is to offer a simple API to work with JSON structures, directly, minimizing the burdens of Java's static typing and minimizing the programmer's typing (pun intended).
+</p>
+
+<p>
+To do that, we emulate dynamic typing by unifying all the different JSON entities into a single type called Json. Different kinds of Json entities (primitives, arrays, objects, null) are implemented as sub-classes (privately nested) of Json, but they all share the exact same set of declared operations and to the outside world, there's only one type. Most mutating operations return this which allows for a method chaining. Constructing the correct concrete entities is done by factory methods, one of them called make which is a "do it all" constructor that takes any Java object and converts it into a Json. Warning: only primitives, arrays, collections and maps are supported by default. Handling Java bean mappings can be done by customizing the factory methods - there's an interface for that called <code>Json.Factory</code>.
+</p>
+
+<p>
+As a result of this strategy, coding involves no type casts, much fewer intermediary variables, much simpler navigation through a JSON structure, no new operator every time you want to add an element to a structure, no dealing with a multitude of concrete types. Overall, it makes life easier in the current era of JSON-based REST services, when implemented in Java that is.
+</p>
+
+<p>
+In a sense, we are flipping the argument from the blog <a href="http://existentialtype.wordpress.com/2011/03/19/dynamic-languages-are-static-languages/">Dynamic Languages Are Static Languages</a> and making use of the universal type idea in a static language. Java already has a universal type called Object, but it doesn't have many useful operations. Because the number of possible JSON concrete types is small and well-defined, taking the union of all their interfaces works well here. Whenever an operation doesn't make sense, it will throw an UnsupportedOperationException. But this is fine. We are dynamic, we can guarantee we are calling the right operation for the right concrete type. Otherwise, the tests would fail!
+</p>
+
+<h3>
+<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>A Quick Example</h3>
+
+<code><pre>import mjson.Json;
+
+Json x = Json.object().set("name", "mjson")
+                      .set("version", "1.0")
+                      .set("cost", 0.0)
+                      .set("alias", Json.array("json", "minimal json"));
+x.at("name").asString(); // return mjson as a Java String
+x.at("alias").at(1); // returns "minimal json" as a Json instance
+x.at("alias").up().at("cost").asDouble(); // returns 0.0
+
+String s = x.toString(); // get string representation
+
+x.equals(Json.read(s)); // parse back and compare => true
+</pre></code>
+
+<p>
+For more, read the Javadoc at the link above. No point in repeating it here.
+</p>
+
+<p>
+We are at an official release of version 1.2 with 1.3 being in the works. Suggestions for further enhancements are welcome! Besides some simple nice-to-haves, such as pretty printing or the ability to stream to an OutputStream, pre-packaged Java bean mappings might turn out to be justified after all. Also, jQuery style selectors and a richer set of manipulation operations. Lambdas in Java 8 certainly open interesting API possibilities. For now, we are keeping it simple. The main use case is if you don't have a Java object model for the structured data you want to work with, you don't want such a model, or you don't want it to be mapped exactly and faithfully as a JSON structure.
+</p>
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
