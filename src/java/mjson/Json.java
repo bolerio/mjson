@@ -272,6 +272,32 @@ public class Json
         Json array();
         Json make(Object anything);
     }
+
+    /**
+     * <p>
+     * Represents JSON schema - a specific data format that a JSON entity must
+     * follow. The idea of a JSON schema is very similar to XML. Its main purpose 
+     * is validating input.    
+     * </p>
+     * 
+     *  <p>
+     *  More information about the various JSON schema specifications can be 
+     *  found at http://json-schema.org. JSON Schema is an  IETF draft (v4 currently) and 
+     *  our implementation follows this set of specifications. A quick introductions 
+     *  with a few example follows below.  
+     *  </p>
+     *  
+     *  <p>
+     *  A JSON schema is specified as a JSON object that contains keywords defined by the
+     *  specification.
+     *  </p>
+     * @author Borislav Iordanov
+     *
+     */
+    public static interface Schema
+    {
+    	
+    }
     
     public static class DefaultFactory implements Factory
     {
