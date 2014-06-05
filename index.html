@@ -37,7 +37,34 @@
 <p>mJson is an extremely lightweight Java JSON library with a very concise API. It is implemented entirely in a single class called Json. Unlike other JSON libraries, it focuses on manipulating JSON structures in Java without necessarily mapping them to/from strongly typed Java objects. The main goal is to reduce verbosity and work with JSON in Java as naturally as in JavaScript. Yes, JSON is naturally embedded in JavaScript, so syntactically it could never be as easy in a Java context, but it still doesn't make much sense to have strongly typed JSON elements when the structures are dynamic and untyped to being with. For example in GSON, and pretty much all other libraries, one ends up suffering the verbosity of strong typing, with type casts all over the place, without getting any of the benefits. If you are writing REST services that work directly with JSON and you're not mapping it to Java, i.e. if you're using JSON as structured data that both client and server can work with, mJson would be a better choice. If you need more control and would like to enchance it with automatic beans to/from Json mappings or you would like to change how Json elements are represented internally, mJson allows you to do that as well!</p>
 
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Get Id</h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Features</h3>
+
+<ul class="task-list">
+<li>Single universal type - everything is a <code>Json</code>, no type casting</li>
+<li>Single factory method, no new operators, just call <code>Json.make(anything here)</code>
+</li>
+<li>Fast, hand-coded parsing</li>
+<li>Designed as a general purpose data structure for use in Java</li>
+<li>Parent pointers and <code>up</code> method to traverse the JSON structure</li>
+<li>Concise methods to read (<code>Json.at</code>), modify (<code>Json.set</code>, <code>Json.add</code>), duplicate (<code>Json.dup</code>), merge (<code>Json.with</code>) </li>
+<li>Methods for type-check (e.g. <code>Json.isString()</code>) and access to underlying Java value (e.g. <code>Json.asString()</code>)</li>
+<li>Method chaining</li>
+<li>Pluggable factory to build your own support for arbitrary Java&lt;-&gt;Json mapping</li>
+<li>1 Java file is the whole library with no external dependencies</li>
+</ul>
+
+<h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Wish List</h3>
+
+<p><a href="mail:borislav.iordanov@gmail.com">Get in touch</a> if you want to help!</p>
+
+<ol class="task-list">
+<li>Traversal API, with pattern-matching</li>
+<li>JSON Schema supports for validation and template generation</li>
+</ol>
+
+<h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Get It</h3>
 
 <p>
 It is in Maven central, so add this to your pom.xml if you are using Maven:
