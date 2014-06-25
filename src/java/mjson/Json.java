@@ -1016,7 +1016,7 @@ public class Json
 		public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
 		{			
-			return x instanceof NumberJson && ((NumberJson)x).val.equals(val); 
+			return x instanceof NumberJson && val.doubleValue() == ((NumberJson)x).val.doubleValue(); 
 		}				
 	}
 	
@@ -1693,12 +1693,32 @@ public class Json
 		 System.out.println(j);
 	}
 	*/
-
+//	static String readFromFile(String filename)
+//    {
+//        try
+//        {
+//            StringBuilder sb = new StringBuilder();
+//            java.io.FileReader in = new java.io.FileReader(filename);
+//            char [] buf = new char[1024];
+//            for (int c = in.read(buf); c > 0; c = in.read(buf))
+//                sb.append(buf, 0, c);
+//            in.close();
+//            return sb.toString();
+//        }
+//        catch (Exception ex)
+//        {
+//            throw new RuntimeException(ex);
+//        }
+//    }  
 	public static void main(String[] args)
     {	
+//		System.out.println(Json.read(readFromFile("c:/temp/data1.json")));
 		Json j = Json.object("label", "Does CTRL+Q show an \"OPEN\" Bulky Work Order number?");
 	    String evilJson = j.toString();	 
 	    System.out.println("To string: " + evilJson);
-        System.out.println("Parsed: " + Json.read(evilJson)); 
+        System.out.println("Parsed: " + Json.read(evilJson));
+        Json x = Json.make(42);
+        Json y = Json.make(42.0);
+        System.out.println(x.equals(y));
     }
 }
