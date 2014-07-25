@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * 
@@ -295,8 +296,145 @@ public class Json
      *
      */
     public static interface Schema
-    {
+    {    	
+    	Json validate(Json document);
     	
+    	/**
+    	 * <p>Possible options are: <code>ignoreDefaults:true|false</code>.
+    	 * </p>
+    	 * @return A newly created <code>Json</code> conforming to this schema.
+    	 */
+    	Json generate(Json options);
+    }
+
+	// For the implementation of schema at least, we'd benefit a lot from the
+	// new Java 8 function API, so we should rewrite it when that comes
+	// along. For now, we just introduce here the same interfaces
+	// so then porting to Java 8 becomes trivial.
+	static interface Function<T,R>	{ R apply(T t); }
+    
+    static class DefaultSchema implements Schema
+    {
+    	static interface Instruction extends Function<Json, Json>{};
+
+    	static Json maybeError(Json errors, Json E) 
+    		{ return E == null ? errors : (errors == null ? Json.array() : errors).add(E); }
+
+    	// Anything is valid schema
+    	static Instruction any = new Instruction() { public Json apply(Json param) { return null; } };
+    	
+    	// Type validation    	
+    	class IsObject implements Instruction { public Json apply(Json param) 
+    		{ return param.isObject() ? null : Json.make(param.toString(maxchars)); } }
+    	class IsArray implements Instruction { public Json apply(Json param) 
+    		{ return param.isArray() ? null : Json.make(param.toString(maxchars)); } }
+    	class IsString implements Instruction { public Json apply(Json param) 
+    		{ return param.isString() ? null : Json.make(param.toString(maxchars)); } }    	
+    	class IsBoolean implements Instruction { public Json apply(Json param) 
+			{ return param.isBoolean() ? null : Json.make(param.toString(maxchars)); } }
+    	class IsNull implements Instruction { public Json apply(Json param) 
+			{ return param.isNull() ? null : Json.make(param.toString(maxchars)); } }    	
+    	class IsNumber implements Instruction { public Json apply(Json param) 
+			{ return param.isNumber() ? null : Json.make(param.toString(maxchars)); } }    	    	
+    	class IsInteger implements Instruction { public Json apply(Json param) 
+			{ return param.isNumber() && ((Number)param.getValue()) instanceof Integer  ? null : Json.make(param.toString(maxchars)); } }    	
+    	    	
+    	class CheckObject implements Instruction
+    	{
+    		int min, max;
+    		HashSet<String> checked = new HashSet<String>();
+    		Instruction additionalSchema = any;
+    		ArrayList<Instruction> props;
+
+    		
+        	// Object validation
+        	class CheckProperty implements Instruction 
+        	{ 
+        		String name;
+        		Instruction schema; 
+        		boolean required;
+        		public CheckProperty(String name, Instruction schema, boolean required) 
+        			{ this.name = name; this.schema = schema; this.required = required; }
+        		public Json apply(Json param)
+        		{    	
+        			Json value = param.at(name);
+        			if (value == null)
+        				return required ?
+        					Json.make("Property '" + name + "' missing from object " + param.toString(maxchars)) : null;
+        			else
+        			{
+        				checked.add(name);
+        				return schema.apply(param.at(name));
+        			}
+        		} 
+        	}
+        	
+        	class CheckPatternProperty implements Instruction 
+        	{ 
+        		Pattern pattern;
+        		Instruction schema; 
+        		public CheckPatternProperty(String pattern, Instruction schema) 
+        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }
+        		public Json apply(Json param)
+        		{    	
+        			Json errors = null;
+        			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
+        				if (pattern.matcher(e.getKey()).matches())
+        				{
+        					errors = maybeError(errors, schema.apply(e.getValue()));
+        					checked.add(e.getKey());
+        				}
+        			return errors;
+        		} 
+        	}
+    		
+    		public Json apply(Json param)
+    		{
+    			Json errors = null;
+    			checked.clear();
+    			for (Instruction I : props)
+    				errors = maybeError(errors, I.apply(param));    			
+    			if (additionalSchema != any) for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
+    				if (!checked.contains(e.getKey()))
+        				errors = maybeError(errors, additionalSchema == null ? 
+        							Json.make("Extra property '" + e.getKey() + 
+        									  "', schema doesn't allow any properties not explicitly defined:" + 
+        									  param.toString(maxchars)) 
+        							: additionalSchema.apply(param));    	
+    			if (param.asJsonMap().size() < min)
+    				errors = maybeError(errors, Json.make("Object " + param.toString(maxchars) + 
+    							" has fewer than the permitted " + min + "  number of properties."));
+    			if (param.asJsonMap().size() > max)
+    				errors = maybeError(errors, Json.make("Object " + param.toString(maxchars) + 
+    							" has more than the permitted " + min + "  number of properties."));
+    			return errors;
+    		}
+    	}
+    	
+    	int maxchars = 50;
+    	Json theschema;
+    	Instruction start;
+    	
+    	DefaultSchema(Json theschema) { this.theschema = theschema; }
+    	    	
+    	void process(Json el, Json S, Json errors)
+    	{
+    	}
+    	public Json validate(Json document)
+    	{
+    		Json result = Json.object("ok", true, "errors", Json.array());
+    		return result;
+    	}
+    	public Json generate(Json options)
+    	{
+    		Json result = Json.nil();
+    		return result;
+    	}
+    }
+    
+    public static Schema schema(Json S)
+    {
+    	return new DefaultSchema(S);
     }
     
     public static class DefaultFactory implements Factory
@@ -500,6 +638,18 @@ public class Json
 	
 	protected Json() { }
 	protected Json(Json enclosing) { this.enclosing = enclosing; }
+	
+	/**
+	 * <p>Return a string representation of <code>this</code> that does 
+	 * not exceed a certain maximum length. This is useful in constructing
+	 * error messages or any other place where only a "preview" of the
+	 * JSON element should be displayed. Some JSON structures can get 
+	 * very large and this method will help avoid string serializing 
+	 * the whole of them. </p>
+	 * @param maxCharacters The maximum number of characters for
+	 * the string representation.
+	 */
+	public String toString(int maxCharacters) { return toString(); };
 	
 	/**
 	 * <p>Explicitly set the parent of this element. The parent is presumably an array
@@ -982,7 +1132,13 @@ public class Json
 		{
 			return '"' + escaper.escapeJsonString(val) + '"'; 
 		}
-		
+		public String toString(int maxCharacters) 
+		{
+			if (val.length() <= maxCharacters)
+				return toString();
+			else
+				return '"' + escaper.escapeJsonString(val.subSequence(0,  maxCharacters)) + "...\"";
+		};		
 		public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
 		{			
@@ -1063,11 +1219,13 @@ public class Json
 
 		public Json with(Json object) 
 		{
+			if (object == null) return this;
 			if (!object.isArray())
-				throw new UnsupportedOperationException();
-			// what about "enclosing" here? we don't have a provision where a Json 
-			// element belongs to more than one enclosing elements...
-			L.addAll(((ArrayJson)object).L);
+				add(object);
+			else
+				// what about "enclosing" here? we don't have a provision where a Json 
+				// element belongs to more than one enclosing elements...
+				L.addAll(((ArrayJson)object).L);
 			return this;
 		}
 		
@@ -1089,16 +1247,31 @@ public class Json
 		
 		public String toString()
 		{
+			return toString(Integer.MAX_VALUE);
+		}
+		
+		public String toString(int maxCharacters) 
+		{
 			StringBuilder sb = new StringBuilder("[");
 			for (Iterator<Json> i = L.iterator(); i.hasNext(); )
 			{
-				sb.append(i.next().toString());
+				String s = i.next().toString(maxCharacters);
+				if (sb.length() + s.length() > maxCharacters)
+					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
+				else
+					sb.append(s);
 				if (i.hasNext())
 					sb.append(",");
-			}
+				if (sb.length() >= maxCharacters)
+				{
+					sb.append("...");
+					break;
+				}
+			}			
 			sb.append("]");
-			return sb.toString();
+			return sb.toString();			
 		}
+		
 		public int hashCode() { return L.hashCode(); }
 		public boolean equals(Object x)
 		{			
@@ -1146,6 +1319,7 @@ public class Json
 
 		public Json with(Json x)
 		{
+			if (x == null) return this;			
 			if (!x.isObject())
 				throw new UnsupportedOperationException();
 			object.putAll(((ObjectJson)x).object);
@@ -1191,17 +1365,32 @@ public class Json
 		
 		public String toString()
 		{
+			return toString(Integer.MAX_VALUE);
+		}
+		
+		public String toString(int maxCharacters)
+		{
 			StringBuilder sb = new StringBuilder("{");
 			for (Iterator<Map.Entry<String, Json>> i = object.entrySet().iterator(); i.hasNext(); )
 			{
 				Map.Entry<String, Json> x  = i.next();
-				sb.append('"');
+				sb.append('"');				
 				sb.append(escaper.escapeJsonString(x.getKey()));
 				sb.append('"');
 				sb.append(":");
-				sb.append(x.getValue().toString());
+				String s = x.getValue().toString(maxCharacters);
+				if (sb.length() + s.length() > maxCharacters)
+					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
+				else
+					sb.append(s);				
+				sb.append(s);
 				if (i.hasNext())
 					sb.append(",");
+				if (sb.length() >= maxCharacters)
+				{
+					sb.append("...");
+					break;
+				}
 			}
 			sb.append("}");
 			return sb.toString();
