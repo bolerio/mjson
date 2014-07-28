@@ -339,9 +339,76 @@ public class Json
     	class IsInteger implements Instruction { public Json apply(Json param) 
 			{ return param.isNumber() && ((Number)param.getValue()) instanceof Integer  ? null : Json.make(param.toString(maxchars)); } }    	
     	    	
+    	class CheckString implements Instruction
+    	{
+    		int min = 0, max = Integer.MAX_VALUE;
+    		Pattern pattern;
+    		
+    		public Json apply(Json param)
+    		{
+    			Json errors = null;
+    			if (!param.isString()) return errors;    			
+    			String s = param.asString();
+    			if (s.length() < min || s.length() > max)
+					errors = maybeError(errors,Json.make("String  " + param.toString(maxchars) + 
+							" has length outside of the permitted range [" + min + "," + max + "]."));
+    			if (!pattern.matcher(s).matches())
+					errors = maybeError(errors,Json.make("String  " + param.toString(maxchars) + 
+							" does not match regex " + pattern.toString()));    				
+    			return errors;
+    		}	
+    	}
+
+    	class CheckNumber implements Instruction
+    	{
+    		double min = Double.NaN, max = Double.NaN, multipleOf = Double.NaN;
+    		boolean exclusiveMin = false, exclusiveMax = false;
+    		public Json apply(Json param)
+    		{
+    			Json errors = null;
+    			if (!param.isNumber()) return errors;    			
+    			double value = param.asDouble();
+    			if (min != Double.NaN && (value < min || exclusiveMin && value == min))
+    				errors = maybeError(errors,Json.make("Number " + param + " is below allowed minimum " + min));    				
+    			if (max != Double.NaN && (value > max || exclusiveMax && value == max))
+        			errors = maybeError(errors,Json.make("Number " + param + " is above allowed maximum " + max));
+    			if (multipleOf != Double.NaN && (value / multipleOf) % 1 == 0)
+    				errors = maybeError(errors,Json.make("Number " + param + " is not a multiple of  " + multipleOf));    				
+    			return errors;
+    		}
+    	}
+    	
+       	class CheckArray implements Instruction
+       	{
+       		int min = 0, max = Integer.MAX_VALUE;
+       		boolean uniqueitems;
+       		Instruction additionalSchema = any;
+       		Instruction schema;
+       		ArrayList<Instruction> schemas;
+       		
+    		public Json apply(Json param)
+    		{
+    			Json errors = null;
+    			if (!param.isArray()) return errors;    			
+    			int size = param.asJsonList().size();
+    			for (int i = 0; i < size; i++)
+    			{
+    				Instruction S = schema != null ? schema
+    						: i < schemas.size() ? S = schemas.get(i) : additionalSchema;
+    				errors = maybeError(errors, S.apply(param.at(i)));
+    				if (uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
+    					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
+    			}
+    			if (size < min || size > max)
+					errors = maybeError(errors,Json.make("Array  " + param.toString(maxchars) + 
+							" has number of elements outside of the permitted range [" + min + "," + max + "]."));    				
+    			return errors;
+    		}
+       	}
+       	
     	class CheckObject implements Instruction
     	{
-    		int min, max;
+    		int min = 0, max = Integer.MAX_VALUE;
     		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
     		ArrayList<Instruction> props;
@@ -391,6 +458,7 @@ public class Json
     		public Json apply(Json param)
     		{
     			Json errors = null;
+    			if (!param.isObject()) return errors;
     			checked.clear();
     			for (Instruction I : props)
     				errors = maybeError(errors, I.apply(param));    			
@@ -411,11 +479,146 @@ public class Json
     		}
     	}
     	
+    	class Sequence implements Instruction
+    	{
+    		ArrayList<Instruction> seq = new ArrayList<Instruction>();
+    		public Json apply(Json param)
+    		{
+    			Json errors = null;
+    			for (Instruction I : seq)
+    				errors = maybeError(errors, I.apply(param));
+    			return errors;
+    		}
+    		public Sequence add(Instruction I) { seq.add(I); return this; } 
+    	}
+    	
+    	class CheckType implements Instruction
+    	{
+    		Json types;
+    		public CheckType(Json types) { this.types = types; }
+    		public Json apply(Json param)
+    		{
+    			String ptype = param.isString() ? "string" :
+    						   param.isObject() ? "object" :
+    						   param.isArray() ? "array" :
+    						   param.isNumber() ? "number" :
+    						   param.isNull() ? "null" : "boolean";
+    			for (Json type : types.asJsonList())
+    				if (type.asString().equals(ptype)) 
+    					return null;
+    				else if (type.asString().equals("integer") && 
+    						 param.isNumber() && 
+    						 param.asDouble() % 1 == 0)
+    					return null;
+   				return Json.array().add(Json.make("Type mistmatch for " + param.toString(maxchars) + 
+   								", allowed types: " + types));
+    		}    		
+    	}
+    	
+    	class CheckEnum implements Instruction
+    	{
+    		Json theenum;
+    		public CheckEnum(Json theenum) { this.theenum = theenum; }
+    		public Json apply(Json param)
+    		{    			
+    			for (Json option : theenum.asJsonList())
+    				if (param.equals(option))
+    					return null;
+    			return Json.array().add("Element " + param.toString(maxchars) + 
+    					" doesn't match any of enumerated possibilities " + theenum);    			
+    		}    		
+    	}
+    	
+    	class CheckAny implements Instruction
+    	{
+    		ArrayList<Instruction> alternates = new ArrayList<Instruction>();
+    		Json schema;
+    		public Json apply(Json param)
+    		{    			
+    			for (Instruction I : alternates)    				
+    				if (I.apply(param) == null)
+    					return null;
+    			return Json.array().add("Element " + param.toString(maxchars) + 
+    					" must conform to at least one of available sub-schemas " + 
+    					schema.toString(maxchars));    			
+    		}    		
+    	}
+     	
+    	class CheckOne implements Instruction
+    	{
+    		ArrayList<Instruction> alternates = new ArrayList<Instruction>();
+    		Json schema;
+    		public Json apply(Json param)
+    		{    			
+    			int matches = 0;
+    			for (Instruction I : alternates)    				
+    				if (I.apply(param) == null)
+    					matches++;
+    			if (matches != 1)
+	    			return Json.array().add("Element " + param.toString(maxchars) + 
+	    					" must conform to exactly one of available sub-schemas, but not more " + 
+	    					schema.toString(maxchars));    			
+    			else
+    				return null;
+    		}    		
+    	}
+    	
+    	class CheckNot implements Instruction
+    	{
+    		Instruction I;
+    		Json schema;
+    		public CheckNot(Instruction I, Json schema) { this.I = I; this.schema = schema; }
+    		public Json apply(Json param)
+    		{    			
+   				if (I.apply(param) != null)
+    				return null;
+   				else
+   					return Json.array().add("Element " + param.toString(maxchars) + 
+    					" must NOT conform to the schema " + schema.toString(maxchars));    			
+    		}    		
+    	}
+
     	int maxchars = 50;
     	Json theschema;
     	Instruction start;
     	
-    	DefaultSchema(Json theschema) { this.theschema = theschema; }
+    	Instruction compile(Json S)
+    	{
+    		Sequence seq = new Sequence();
+    		if (S.has("type") && !S.is("type", "any"))
+    			seq.add(new CheckType(S.at("type").isString() ? 
+    						Json.array().add(S.at("type")) : S.at("type")));
+    		if (S.has("enum"))
+    			seq.add(new CheckEnum(S.at("enum")));
+    		if (S.has("allOf"))
+    		{
+    			Sequence sub = new Sequence();
+    			for (Json x : S.at("allOf").asJsonList())
+    				sub.add(compile(x));
+    			seq.add(sub);
+    		}
+    		if (S.has("anyOf"))
+    		{
+    			CheckAny any = new CheckAny();
+    			any.schema = S.at("anyOf");
+    			for (Json x : any.schema.asJsonList())
+    				any.alternates.add(compile(x));
+    			seq.add(any);
+    		}
+    		if (S.has("oneOf"))
+    		{
+    			CheckOne any = new CheckOne();
+    			any.schema = S.at("oneOf");
+    			for (Json x : any.schema.asJsonList())
+    				any.alternates.add(compile(x));
+    			seq.add(any);
+    		}
+    		if (S.has("not"))
+    			S.add(new CheckNot(compile(S.at("not")), S.at("not")));
+    		return seq;
+    	}
+    	
+    	DefaultSchema(Json theschema) { this.theschema = theschema; this.start = compile(theschema); }
     	    	
     	void process(Json el, Json S, Json errors)
     	{
