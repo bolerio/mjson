@@ -21,6 +21,8 @@ package mjson;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URL;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -307,6 +309,123 @@ public class Json
     	Json generate(Json options);
     }
 
+    static String fetchContent(URL url)
+    {
+    	try
+    	{
+	    	java.io.Reader reader = new java.io.InputStreamReader((java.io.InputStream)url.getContent());
+	    	StringBuilder content = new StringBuilder();
+	    	char [] buf = new char[1024];
+	    	for (int n = reader.read(buf); n > -1; n = reader.read(buf))
+	    	    content.append(buf);
+	    	return content.toString();
+    	}
+    	catch (Exception ex)
+    	{
+    		throw new RuntimeException(ex);
+    	}
+    }
+    
+    static Json resolvePointer(String pointerRepresentation, Json top)
+    {
+    	String [] parts = pointerRepresentation.split("/");
+    	Json result = top;
+    	for (String p : parts)
+    	{
+    		// TODO: unescaping and decoding
+    		if (p.length() == 0)
+    			continue;
+    		else if (result.isArray())
+    			result = result.at(Integer.parseInt(p));
+    		else if (result.isObject())
+    			result = result.at(p);
+    		else
+    			throw new RuntimeException("Can't resolve pointer " + pointerRepresentation + 
+    					" on document " + top.toString(200));
+    	}
+    	return result;
+    }
+    
+    static Json resolveRef(URI base, Json refdoc, String ref)
+    {
+    	try
+    	{
+	    	URI refuri = new URI(ref);
+	    	if (base != null)
+	    	{
+	    		if (!refuri.isAbsolute())
+	    			refuri = new URI(base.getScheme() + "://" + refuri.getHost() + 
+	    					":" + base.getPort() + 
+	    				(ref.startsWith("/") ? ref : base.getPath() + "/" + ref));	
+	    		if (!base.getScheme().equals(refuri.getScheme()) ||
+		    		!base.getHost().equals(refuri.getHost()) ||
+		    		base.getPort() != refuri.getPort() ||
+		    		!base.getPath().equals(refuri.getPath()))
+		    		refdoc = Json.read(fetchContent(refuri.toURL()));
+	    	}
+	    	if (refuri.getFragment() == null)
+	    		return refdoc;
+	    	else
+	    		return resolvePointer(refuri.getFragment(), refdoc);
+    	}
+    	catch (Exception ex)
+    	{
+    		throw new RuntimeException(ex);
+    	}    	
+    }
+    
+    /**
+     * <p>
+     * Replace all JSON references, as per the http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03 
+     * specification, by their referants. 
+     * </p>
+     * @param json
+     * @param duplicate
+     * @param done
+     * @return
+     */
+	static Json expandReferences(Json json, Json topdoc, URI base, boolean duplicate, Map<String, Json> done)
+	{
+		if (json.isObject())
+		{
+			if (json.has("$ref"))
+			{
+				Json ref = done.get(json.at("$ref").asString());
+				if (ref == null)
+				{
+					ref = resolveRef(base, topdoc, json.at("$ref").asString());
+					done.put(json.at("$ref").asString(), ref);
+				}
+				return ref;
+			}
+			else if (duplicate)
+			{
+				Json O = Json.object();
+				for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
+					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, duplicate, done));
+				return O;
+			}
+			else for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
+				expandReferences(e.getValue(), topdoc, base, duplicate, done);
+		}
+		else if (json.isArray())
+		{
+			if (duplicate)
+			{
+				Json A = Json.array();
+				for (Json j : json.asJsonList())
+					A.add(expandReferences(j, topdoc, base, duplicate, done));
+				return A;
+			}
+			else for (Json j : json.asJsonList())			
+				expandReferences(j, topdoc, base, duplicate, done);
+		}
+		else if (duplicate)
+			return json.dup();
+		return json; 
+	}
+
+	
 	// For the implementation of schema at least, we'd benefit a lot from the
 	// new Java 8 function API, so we should rewrite it when that comes
 	// along. For now, we just introduce here the same interfaces
@@ -406,6 +525,19 @@ public class Json
     		}
        	}
        	
+       	class CheckPropertyPresent implements Instruction
+       	{
+       		String propname;
+       		public CheckPropertyPresent(String propname) { this.propname = propname; }
+       		public Json apply(Json param)
+       		{
+       			if (!param.isObject()) return null;
+       			if (param.has(propname)) return null;
+       			else return Json.array().add(Json.make("Required property " + propname + 
+       					" missing from object " + param.toString(maxchars)));
+       		}
+       	}
+       	
     	class CheckObject implements Instruction
     	{
     		int min = 0, max = Integer.MAX_VALUE;
@@ -419,15 +551,13 @@ public class Json
         	{ 
         		String name;
         		Instruction schema; 
-        		boolean required;
-        		public CheckProperty(String name, Instruction schema, boolean required) 
-        			{ this.name = name; this.schema = schema; this.required = required; }
+        		public CheckProperty(String name, Instruction schema) 
+        			{ this.name = name; this.schema = schema; }
         		public Json apply(Json param)
         		{    	
         			Json value = param.at(name);
         			if (value == null)
-        				return required ?
-        					Json.make("Property '" + name + "' missing from object " + param.toString(maxchars)) : null;
+        				return null;
         			else
         			{
         				checked.add(name);
@@ -577,10 +707,6 @@ public class Json
     					" must NOT conform to the schema " + schema.toString(maxchars));    			
     		}    		
     	}
-
-    	int maxchars = 50;
-    	Json theschema;
-    	Instruction start;
     	
     	Instruction compile(Json S)
     	{
@@ -615,29 +741,125 @@ public class Json
     		}
     		if (S.has("not"))
     			S.add(new CheckNot(compile(S.at("not")), S.at("not")));
+    		
+    		if (S.has("required"))
+    			for (Json p : S.at("required").asJsonList())
+    				S.add(new CheckPropertyPresent(p.asString()));
+    		
+    		CheckObject objectCheck = new CheckObject();
+    		if (S.has("properties"))
+    			for (Map.Entry<String, Json> p : S.at("properties").asJsonMap().entrySet())
+    				objectCheck.props.add(objectCheck.new CheckProperty(
+    						p.getKey(), compile(p.getValue())));
+    		if (S.has("additionalProperties"))
+    		{
+    			if (S.at("additionalProperties").isObject())
+    				objectCheck.additionalSchema = compile(S.at("additionalProperties"));
+    			else if (!S.at("additionalProperties").asBoolean())
+    				objectCheck.additionalSchema = null; // means no additional properties allowed
+    		}	
+    		if (S.has("minProperties"))
+    			objectCheck.min = S.at("minProperties").asInteger();
+    		if (S.has("maxProperties"))
+    			objectCheck.max = S.at("maxProperties").asInteger();
+    		
+    		if (!objectCheck.props.isEmpty() || objectCheck.additionalSchema != any ||
+    			objectCheck.min > 0 || objectCheck.max < Integer.MAX_VALUE)
+    			seq.add(objectCheck);
+    		
+    		CheckArray arrayCheck = new CheckArray();
+    		if (S.has("items"))
+    			if (S.at("items").isObject())
+    				arrayCheck.schema = compile(S.at("items"));
+    			else 
+    			{
+    				arrayCheck.schemas = new ArrayList<Instruction>();
+    				for (Json s : S.at("items").asJsonList())
+    					arrayCheck.schemas.add(compile(s));
+    			}
+    		if (S.has("additionalItems"))
+    			if (S.at("additionalItems").isObject())
+    				arrayCheck.additionalSchema = compile(S.at("additionalItems"));
+    			else if (!S.at("additionalItems").asBoolean())
+    				arrayCheck.additionalSchema = null;
+    		if (S.has("uniqueItems"))
+    			arrayCheck.uniqueitems = S.at("uniqueItems").asBoolean();
+    		if (S.has("minItems"))
+    			arrayCheck.min = S.at("minItems").asInteger();
+    		if (S.has("maxItems"))
+    			arrayCheck.max = S.at("maxItems").asInteger();
+    		if (arrayCheck.schema != null || arrayCheck.schemas != null ||
+    			arrayCheck.additionalSchema != any || 
+    			arrayCheck.max < Integer.MAX_VALUE || arrayCheck.min > 0)
+    			seq.add(arrayCheck);
+
+    		CheckNumber numberCheck = new CheckNumber();
+    		if (S.has("minimum"))
+    			numberCheck.min = S.at("minimum").asDouble();
+    		if (S.has("maximum"))
+    			numberCheck.max = S.at("maximum").asDouble();
+    		if (S.has("multipleOf"))
+    			numberCheck.multipleOf = S.at("multipleOf").asDouble();
+    		if (S.has("exclusiveMinimum"))
+    			numberCheck.exclusiveMin = S.at("exclusiveMinimum").asBoolean();
+    		if (S.has("exclusiveMaximum"))
+    			numberCheck.exclusiveMax = S.at("exclusiveMaximum").asBoolean();
+    		if (numberCheck.min != Double.NaN || numberCheck.max != Double.NaN || numberCheck.multipleOf != Double.NaN)
+    			seq.add(numberCheck);
+    		
+    		CheckString stringCheck = new CheckString();
+    		if (S.has("minLength"))
+    			stringCheck.min = S.at("minLength").asInteger();
+    		if (S.has("maxLength"))
+    			stringCheck.max = S.at("maxLength").asInteger();
+    		if (S.has("pattern"))
+    			stringCheck.pattern = Pattern.compile(S.at("pattern").asString());
+    		if (stringCheck.min > 0 || stringCheck.max < Integer.MAX_VALUE || stringCheck.pattern != null)
+    			seq.add(stringCheck);
     		return seq;
     	}
     	
-    	DefaultSchema(Json theschema) { this.theschema = theschema; this.start = compile(theschema); }
-    	    	
-    	void process(Json el, Json S, Json errors)
-    	{
+    	int maxchars = 50;
+    	URI uri;
+    	Json theschema;
+    	Instruction start;
+    	
+    	DefaultSchema(URI uri, Json theschema) 
+    	{ 
+    		this.uri = uri; 
+    		this.theschema = expandReferences(theschema, theschema, uri, true, new HashMap<String, Json>()); 
+    		this.start = compile(theschema); 
     	}
+    	    	    	
     	public Json validate(Json document)
     	{
-    		Json result = Json.object("ok", true, "errors", Json.array());
-    		return result;
+    		Json result = Json.object("ok", true);
+    		Json errors = start.apply(document);    		    		
+    		return errors == null ? result : result.set("errors", errors);
     	}
+    	
     	public Json generate(Json options)
     	{
     		Json result = Json.nil();
+    		// TODO...
     		return result;
     	}
     }
     
     public static Schema schema(Json S)
     {
-    	return new DefaultSchema(S);
+    	return new DefaultSchema(null, S);
+    }
+    
+    public static Schema schema(URI uri)
+    {
+    	try { return new DefaultSchema(uri, Json.read(Json.fetchContent(uri.toURL()))); }
+    	catch (Exception ex) { throw new RuntimeException(ex); }
+    }
+    
+    public static Schema schema(Json S, URI uri)
+    {
+    	return new DefaultSchema(uri, S);
     }
     
     public static class DefaultFactory implements Factory
