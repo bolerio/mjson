@@ -437,7 +437,7 @@ public class Json
     	static interface Instruction extends Function<Json, Json>{};
 
     	static Json maybeError(Json errors, Json E) 
-    		{ return E == null ? errors : (errors == null ? Json.array() : errors).add(E); }
+    		{ return E == null ? errors : (errors == null ? Json.array() : errors).with(E); }
 
     	// Anything is valid schema
     	static Instruction any = new Instruction() { public Json apply(Json param) { return null; } };
@@ -487,11 +487,11 @@ public class Json
     			Json errors = null;
     			if (!param.isNumber()) return errors;    			
     			double value = param.asDouble();
-    			if (min != Double.NaN && (value < min || exclusiveMin && value == min))
+    			if (!Double.isNaN(min) && (value < min || exclusiveMin && value == min))
     				errors = maybeError(errors,Json.make("Number " + param + " is below allowed minimum " + min));    				
-    			if (max != Double.NaN && (value > max || exclusiveMax && value == max))
+    			if (!Double.isNaN(max) && (value > max || exclusiveMax && value == max))
         			errors = maybeError(errors,Json.make("Number " + param + " is above allowed maximum " + max));
-    			if (multipleOf != Double.NaN && (value / multipleOf) % 1 == 0)
+    			if (!Double.isNaN(multipleOf) && (value / multipleOf) % 1 == 0)
     				errors = maybeError(errors,Json.make("Number " + param + " is not a multiple of  " + multipleOf));    				
     			return errors;
     		}
@@ -543,7 +543,7 @@ public class Json
     		int min = 0, max = Integer.MAX_VALUE;
     		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
-    		ArrayList<Instruction> props;
+    		ArrayList<Instruction> props = new ArrayList<Instruction>();
 
     		
         	// Object validation
@@ -707,6 +707,40 @@ public class Json
     					" must NOT conform to the schema " + schema.toString(maxchars));    			
     		}    		
     	}
+
+    	class CheckSchemaDependency implements Instruction
+    	{
+    		Instruction schema;
+    		String property;
+    		public CheckSchemaDependency(String property, Instruction schema) { this.property = property; this.schema = schema; }
+    		public Json apply(Json param)
+    		{
+    			if (!param.isObject()) return null;
+    			else if (!param.has(property)) return null;
+    			else return (schema.apply(param));
+    		}
+    	}
+
+    	class CheckPropertyDependency implements Instruction
+    	{
+    		Json required;
+    		String property;
+    		public CheckPropertyDependency(String property, Json required) { this.property = property; this.required = required; }
+       		public Json apply(Json param)
+       		{
+       			if (!param.isObject()) return null;
+       			if (!param.has(property)) return null;
+       			else
+       			{
+       				Json errors = null;
+       				for (Json p : required.asJsonList())
+       					if (!param.has(p.asString()))
+		       				errors = maybeError(errors, Json.make("Conditionally required property " + p + 
+		       					" missing from object " + param.toString(maxchars)));
+       				return errors;
+       			}
+       		}
+    	}
     	
     	Instruction compile(Json S)
     	{
@@ -740,11 +774,11 @@ public class Json
     			seq.add(any);
     		}
     		if (S.has("not"))
-    			S.add(new CheckNot(compile(S.at("not")), S.at("not")));
+    			seq.add(new CheckNot(compile(S.at("not")), S.at("not")));
     		
     		if (S.has("required"))
     			for (Json p : S.at("required").asJsonList())
-    				S.add(new CheckPropertyPresent(p.asString()));
+    				seq.add(new CheckPropertyPresent(p.asString()));
     		
     		CheckObject objectCheck = new CheckObject();
     		if (S.has("properties"))
@@ -804,7 +838,7 @@ public class Json
     			numberCheck.exclusiveMin = S.at("exclusiveMinimum").asBoolean();
     		if (S.has("exclusiveMaximum"))
     			numberCheck.exclusiveMax = S.at("exclusiveMaximum").asBoolean();
-    		if (numberCheck.min != Double.NaN || numberCheck.max != Double.NaN || numberCheck.multipleOf != Double.NaN)
+    		if (!Double.isNaN(numberCheck.min) || !Double.isNaN(numberCheck.max) || !Double.isNaN(numberCheck.multipleOf))
     			seq.add(numberCheck);
     		
     		CheckString stringCheck = new CheckString();
@@ -816,6 +850,15 @@ public class Json
     			stringCheck.pattern = Pattern.compile(S.at("pattern").asString());
     		if (stringCheck.min > 0 || stringCheck.max < Integer.MAX_VALUE || stringCheck.pattern != null)
     			seq.add(stringCheck);
+    		
+    		if (S.has("dependencies"))
+    			for (Map.Entry<String, Json> e : S.at("dependencies").asJsonMap().entrySet())
+    				if (e.getValue().isObject())
+    					seq.add(new CheckSchemaDependency(e.getKey(), compile(e.getValue())));
+    				else if (e.getValue().isArray())
+    					seq.add(new CheckPropertyDependency(e.getKey(), e.getValue()));
+    				else 
+    					seq.add(new CheckPropertyDependency(e.getKey(), Json.array(e.getValue())));
     		return seq;
     	}
     	
@@ -835,7 +878,7 @@ public class Json
     	{
     		Json result = Json.object("ok", true);
     		Json errors = start.apply(document);    		    		
-    		return errors == null ? result : result.set("errors", errors);
+    		return errors == null ? result : result.set("errors", errors).set("ok", false);
     	}
     	
     	public Json generate(Json options)
@@ -1806,8 +1849,6 @@ public class Json
 				String s = x.getValue().toString(maxCharacters);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
-				else
-					sb.append(s);				
 				sb.append(s);
 				if (i.hasNext())
 					sb.append(",");
