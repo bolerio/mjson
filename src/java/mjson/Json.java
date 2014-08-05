@@ -335,7 +335,8 @@ public class Json
     		// TODO: unescaping and decoding
     		if (p.length() == 0)
     			continue;
-    		else if (result.isArray())
+    		p = p.replace("~1", "/").replace("~0", "~");
+    		if (result.isArray())
     			result = result.at(Integer.parseInt(p));
     		else if (result.isObject())
     			result = result.at(p);
@@ -513,7 +514,7 @@ public class Json
     			for (int i = 0; i < size; i++)
     			{
     				Instruction S = schema != null ? schema
-    						: i < schemas.size() ? S = schemas.get(i) : additionalSchema;
+    						: (schemas != null && i < schemas.size()) ? schemas.get(i) : additionalSchema;
     				errors = maybeError(errors, S.apply(param.at(i)));
     				if (uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
     					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
