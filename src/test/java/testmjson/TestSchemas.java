@@ -330,11 +330,17 @@ public class TestSchemas
 	
 	public static void main(String [] argv)
 	{
-		Json set = Json.read(readTextResource("/suite/properties.json"));
+//		String content = TestSchemas.readFile(new File("c:/work/mjson/schema.json"));
+//		Json j = Json.read(content);
+//		System.out.println(j.toString());
+//		Json.schema(Json.object(
+//            "$ref","https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/refToInteger"
+//        ));
+		Json set = Json.read(readTextResource("/suite/multipleOf.json"));
 		for (Json one : set.asJsonList())
 		{
 			Json.Schema schema = Json.schema(one.at("schema"));
-			System.out.println(one.at("schema"));
+			//System.out.println(one.at("schema"));
 			for (Json t : one.at("tests").asJsonList())
 			{
 				SuiteTestJson thetest = new SuiteTestJson("properties",

@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -347,32 +348,44 @@ public class Json
     	return result;
     }
     
-    static Json resolveRef(URI base, Json refdoc, String ref)
+    static URI makeAbsolute(URI base, String ref) throws Exception
     {
-    	try
+    	URI refuri;
+    	if (base != null && !new URI(ref).isAbsolute())
     	{
-	    	URI refuri = new URI(ref);
-	    	if (base != null)
-	    	{
-	    		if (!refuri.isAbsolute())
-	    			refuri = new URI(base.getScheme() + "://" + refuri.getHost() + 
-	    					":" + base.getPort() + 
-	    				(ref.startsWith("/") ? ref : base.getPath() + "/" + ref));	
-	    		if (!base.getScheme().equals(refuri.getScheme()) ||
-		    		!base.getHost().equals(refuri.getHost()) ||
-		    		base.getPort() != refuri.getPort() ||
-		    		!base.getPath().equals(refuri.getPath()))
-		    		refdoc = Json.read(fetchContent(refuri.toURL()));
-	    	}
-	    	if (refuri.getFragment() == null)
-	    		return refdoc;
-	    	else
-	    		return resolvePointer(refuri.getFragment(), refdoc);
+    		StringBuilder sb = new StringBuilder()
+    			.append(base.getScheme()).append("://").append(base.getHost());
+    		if (base.getPort() > -1)
+    			sb.append(":").append(Integer.toString(base.getPort()));
+    		if (!ref.startsWith("/"))
+    			sb.append(base.getPath()).append(ref.startsWith("#") ? "" : "/");
+			refuri = new URI(sb.append(ref).toString());
     	}
-    	catch (Exception ex)
+    	else
+    		refuri = new URI(ref);
+   		return refuri;
+    }
+    
+    static Json resolveRef(URI base, Json refdoc, URI refuri,  Map<String, Json> resolved, Map<Json, Json> expanded) throws Exception
+    {
+    	if (refuri.isAbsolute() &&
+    		 (base == null ||
+    			!base.getScheme().equals(refuri.getScheme()) ||
+	    		!base.getHost().equals(refuri.getHost()) ||
+	    		base.getPort() != refuri.getPort() ||
+	    		!base.getPath().equals(refuri.getPath())))
     	{
-    		throw new RuntimeException(ex);
-    	}    	
+    		refuri = refuri.normalize();
+    		URI docuri = new URI(refuri.getScheme() + "://" + refuri.getHost() + 
+    				((refuri.getPort() > -1) ? ":" + refuri.getPort() : "") +
+    				refuri.getPath());	    		
+    		refdoc = Json.read(fetchContent(docuri.toURL()));
+    		refdoc = expandReferences(refdoc, refdoc, docuri, resolved, expanded);
+    	}
+    	if (refuri.getFragment() == null)
+    		return refdoc;
+    	else
+    		return resolvePointer(refuri.getFragment(), refdoc);
     }
     
     /**
@@ -385,45 +398,45 @@ public class Json
      * @param done
      * @return
      */
-	static Json expandReferences(Json json, Json topdoc, URI base, boolean duplicate, Map<String, Json> done)
+	static Json expandReferences(Json json, Json topdoc, URI base, Map<String, Json> resolved, Map<Json, Json> expanded) throws Exception
 	{
+		if (expanded.containsKey(json)) return json;
 		if (json.isObject())
 		{
 			if (json.has("$ref"))
 			{
-				Json ref = done.get(json.at("$ref").asString());
+				URI refuri = makeAbsolute(base, json.at("$ref").asString());
+				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
-					ref = resolveRef(base, topdoc, json.at("$ref").asString());
-					done.put(json.at("$ref").asString(), ref);
+					ref = resolveRef(base, topdoc, refuri, resolved, expanded);
+					resolved.put(refuri.toString(), ref);					
+					ref = expandReferences(ref, topdoc, base, resolved, expanded);
+					resolved.put(refuri.toString(), ref);
 				}
-				return ref;
+				json = ref;
 			}
-			else if (duplicate)
+			else 
 			{
 				Json O = Json.object();
 				for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
-					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, duplicate, done));
-				return O;
+					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded));
+				json.with(O);
 			}
-			else for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
-				expandReferences(e.getValue(), topdoc, base, duplicate, done);
 		}
 		else if (json.isArray())
 		{
-			if (duplicate)
+//			Json A = Json.array();
+			for (int i = 0; i < json.asJsonList().size(); i++)
 			{
-				Json A = Json.array();
-				for (Json j : json.asJsonList())
-					A.add(expandReferences(j, topdoc, base, duplicate, done));
-				return A;
+				//A.add(expandReferences(j, topdoc, base, resolved));
+				Json el = expandReferences(json.at(i), topdoc, base, resolved, expanded);
+				json.set(i, el);				
 			}
-			else for (Json j : json.asJsonList())			
-				expandReferences(j, topdoc, base, duplicate, done);
+//			return A;
 		}
-		else if (duplicate)
-			return json.dup();
-		return json; 
+		expanded.put(json,  json);
+		return json;
 	}
 
 	
@@ -469,10 +482,11 @@ public class Json
     			Json errors = null;
     			if (!param.isString()) return errors;    			
     			String s = param.asString();
-    			if (s.length() < min || s.length() > max)
+    	        final int size = s.codePointCount(0, s.length());
+    			if (size < min || size > max)
 					errors = maybeError(errors,Json.make("String  " + param.toString(maxchars) + 
 							" has length outside of the permitted range [" + min + "," + max + "]."));
-    			if (!pattern.matcher(s).matches())
+    			if (pattern != null && !pattern.matcher(s).matches())
 					errors = maybeError(errors,Json.make("String  " + param.toString(maxchars) + 
 							" does not match regex " + pattern.toString()));    				
     			return errors;
@@ -545,7 +559,7 @@ public class Json
     		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
     		ArrayList<Instruction> props = new ArrayList<Instruction>();
-
+    		ArrayList<Instruction> patternProps = new ArrayList<Instruction>();
     		
         	// Object validation
         	class CheckProperty implements Instruction 
@@ -592,14 +606,16 @@ public class Json
     			if (!param.isObject()) return errors;
     			checked.clear();
     			for (Instruction I : props)
-    				errors = maybeError(errors, I.apply(param));    			
+    				errors = maybeError(errors, I.apply(param));
+    			for (Instruction I : patternProps)
+    				errors = maybeError(errors, I.apply(param));    			    			
     			if (additionalSchema != any) for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
     				if (!checked.contains(e.getKey()))
         				errors = maybeError(errors, additionalSchema == null ? 
         							Json.make("Extra property '" + e.getKey() + 
         									  "', schema doesn't allow any properties not explicitly defined:" + 
         									  param.toString(maxchars)) 
-        							: additionalSchema.apply(param));    	
+        							: additionalSchema.apply(e.getValue()));    	
     			if (param.asJsonMap().size() < min)
     				errors = maybeError(errors, Json.make("Object " + param.toString(maxchars) + 
     							" has fewer than the permitted " + min + "  number of properties."));
@@ -743,9 +759,13 @@ public class Json
        		}
     	}
     	
-    	Instruction compile(Json S)
+    	Instruction compile(Json S, Map<Json, Instruction> compiled)
     	{
+    		Instruction result = compiled.get(S);
+    		if (result != null)
+    			return result;
     		Sequence seq = new Sequence();
+    		compiled.put(S, seq);
     		if (S.has("type") && !S.is("type", "any"))
     			seq.add(new CheckType(S.at("type").isString() ? 
     						Json.array().add(S.at("type")) : S.at("type")));
@@ -755,7 +775,7 @@ public class Json
     		{
     			Sequence sub = new Sequence();
     			for (Json x : S.at("allOf").asJsonList())
-    				sub.add(compile(x));
+    				sub.add(compile(x, compiled));
     			seq.add(sub);
     		}
     		if (S.has("anyOf"))
@@ -763,7 +783,7 @@ public class Json
     			CheckAny any = new CheckAny();
     			any.schema = S.at("anyOf");
     			for (Json x : any.schema.asJsonList())
-    				any.alternates.add(compile(x));
+    				any.alternates.add(compile(x, compiled));
     			seq.add(any);
     		}
     		if (S.has("oneOf"))
@@ -771,11 +791,11 @@ public class Json
     			CheckOne any = new CheckOne();
     			any.schema = S.at("oneOf");
     			for (Json x : any.schema.asJsonList())
-    				any.alternates.add(compile(x));
+    				any.alternates.add(compile(x, compiled));
     			seq.add(any);
     		}
     		if (S.has("not"))
-    			seq.add(new CheckNot(compile(S.at("not")), S.at("not")));
+    			seq.add(new CheckNot(compile(S.at("not"), compiled), S.at("not")));
     		
     		if (S.has("required"))
     			for (Json p : S.at("required").asJsonList())
@@ -785,11 +805,15 @@ public class Json
     		if (S.has("properties"))
     			for (Map.Entry<String, Json> p : S.at("properties").asJsonMap().entrySet())
     				objectCheck.props.add(objectCheck.new CheckProperty(
-    						p.getKey(), compile(p.getValue())));
+    						p.getKey(), compile(p.getValue(), compiled)));
+    		if (S.has("patternProperties"))
+    			for (Map.Entry<String, Json> p : S.at("patternProperties").asJsonMap().entrySet())
+    				objectCheck.patternProps.add(objectCheck.new CheckPatternProperty(p.getKey(), 
+    								compile(p.getValue(), compiled)));
     		if (S.has("additionalProperties"))
     		{
     			if (S.at("additionalProperties").isObject())
-    				objectCheck.additionalSchema = compile(S.at("additionalProperties"));
+    				objectCheck.additionalSchema = compile(S.at("additionalProperties"), compiled);
     			else if (!S.at("additionalProperties").asBoolean())
     				objectCheck.additionalSchema = null; // means no additional properties allowed
     		}	
@@ -805,16 +829,16 @@ public class Json
     		CheckArray arrayCheck = new CheckArray();
     		if (S.has("items"))
     			if (S.at("items").isObject())
-    				arrayCheck.schema = compile(S.at("items"));
+    				arrayCheck.schema = compile(S.at("items"), compiled);
     			else 
     			{
     				arrayCheck.schemas = new ArrayList<Instruction>();
     				for (Json s : S.at("items").asJsonList())
-    					arrayCheck.schemas.add(compile(s));
+    					arrayCheck.schemas.add(compile(s, compiled));
     			}
     		if (S.has("additionalItems"))
     			if (S.at("additionalItems").isObject())
-    				arrayCheck.additionalSchema = compile(S.at("additionalItems"));
+    				arrayCheck.additionalSchema = compile(S.at("additionalItems"), compiled);
     			else if (!S.at("additionalItems").asBoolean())
     				arrayCheck.additionalSchema = null;
     		if (S.has("uniqueItems"))
@@ -855,12 +879,14 @@ public class Json
     		if (S.has("dependencies"))
     			for (Map.Entry<String, Json> e : S.at("dependencies").asJsonMap().entrySet())
     				if (e.getValue().isObject())
-    					seq.add(new CheckSchemaDependency(e.getKey(), compile(e.getValue())));
+    					seq.add(new CheckSchemaDependency(e.getKey(), compile(e.getValue(), compiled)));
     				else if (e.getValue().isArray())
     					seq.add(new CheckPropertyDependency(e.getKey(), e.getValue()));
     				else 
     					seq.add(new CheckPropertyDependency(e.getKey(), Json.array(e.getValue())));
-    		return seq;
+    		result = seq.seq.size() == 1 ?  seq.seq.get(0) : seq;
+    		compiled.put(S, result);
+    		return result;
     	}
     	
     	int maxchars = 50;
@@ -871,8 +897,12 @@ public class Json
     	DefaultSchema(URI uri, Json theschema) 
     	{ 
     		this.uri = uri; 
-    		this.theschema = expandReferences(theschema, theschema, uri, true, new HashMap<String, Json>()); 
-    		this.start = compile(theschema); 
+    		try
+    		{
+    			this.theschema = expandReferences(theschema, theschema, uri, new HashMap<String, Json>(), new IdentityHashMap<Json, Json>());
+    		}
+    		catch (Exception ex)  { throw new RuntimeException(ex); }
+    		this.start = compile(this.theschema, new IdentityHashMap<Json, Instruction>()); 
     	}
     	    	    	
     	public Json validate(Json document)
@@ -1350,6 +1380,16 @@ public class Json
 	
 	/**
 	 * <p>
+	 * Change the value of a JSON array element. This must be an array. 
+	 * </p>
+	 * @param index 0-based index of the element in the array. 
+	 * @param value the new value of the element
+	 * @return this 
+	 */
+	public Json set(int index, Object value) { throw new UnsupportedOperationException(); }	
+	
+	/**
+	 * <p>
 	 * Combine this object or array with the passed in object or array. The types of 
 	 * <code>this</code> and the <code>object</code> argument must match. If both are
 	 * <code>Json</code> objects, all properties of the parameter are added to <code>this</code>.
@@ -1664,7 +1704,13 @@ public class Json
             }
             return j;
         }
-		
+        
+        public Json set(int index, Object value) 
+        { 
+        	L.set(index, make(value));
+        	return this;
+        }
+        
 		public List<Json> asJsonList() { return L; }
 		public List<Object> asList() 
 		{
@@ -2172,7 +2218,6 @@ public class Json
 	                }
 	                else throw new RuntimeException("Invalid JSON near position: " + it.getIndex());
 	        }
-	        // System.out.println("token: " + token); // enable this line to see the token stream
 	        return (T)token;
 	    }
 	    
@@ -2331,50 +2376,4 @@ public class Json
 	    }
 	}
 	// END Reader
-/*	
-	public static void main(String [] argv)
-	{
-		 Json j = object()
-		  .at("menu", object())
-		    .set("id", "file") 
-		    .set("value", "File")
-		    .at("popup", object())
-		      .at("menuitem", array())
-		        .add(object("value", "New", "onclick", "CreateNewDoc()"))
-		        .add(object("value", "Open", "onclick", "OpenDoc()"))
-		        .add(object("value", "Close", "onclick", "CloseDoc()"))
-		        .up()
-		      .up()
-		    .set("position", 0);
-		 System.out.println(j);
-	}
-	*/
-//	static String readFromFile(String filename)
-//    {
-//        try
-//        {
-//            StringBuilder sb = new StringBuilder();
-//            java.io.FileReader in = new java.io.FileReader(filename);
-//            char [] buf = new char[1024];
-//            for (int c = in.read(buf); c > 0; c = in.read(buf))
-//                sb.append(buf, 0, c);
-//            in.close();
-//            return sb.toString();
-//        }
-//        catch (Exception ex)
-//        {
-//            throw new RuntimeException(ex);
-//        }
-//    }  
-	public static void main(String[] args)
-    {	
-//		System.out.println(Json.read(readFromFile("c:/temp/data1.json")));
-		Json j = Json.object("label", "Does CTRL+Q show an \"OPEN\" Bulky Work Order number?");
-	    String evilJson = j.toString();	 
-	    System.out.println("To string: " + evilJson);
-        System.out.println("Parsed: " + Json.read(evilJson));
-        Json x = Json.make(42);
-        Json y = Json.make(42.0);
-        System.out.println(x.equals(y));
-    }
 }

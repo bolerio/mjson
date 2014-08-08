@@ -1,6 +1,7 @@
 package testmjson;
 
 import junit.framework.Assert;
+import junit.framework.AssertionFailedError;
 
 import org.testng.annotations.Test;
 
@@ -37,7 +38,15 @@ public class SuiteTestJson
 	@Test
 	public void doTest()
 	{
+		try
+		{
 		Assert.assertEquals("Running test " + description + " from " + group,
 						valid, schema.validate(data).is("ok", true));
+		}
+		catch (AssertionFailedError err) // caught so we can break in with debugger here...
+		{
+			schema.validate(data);
+			throw err;
+		}
 	}	
 }
