@@ -1,0 +1,75 @@
+[
+    {
+        "description": "remote ref",
+        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/integer.json"},
+        "tests": [
+            {
+                "description": "remote ref valid",
+                "data": 1,
+                "valid": true
+            },
+            {
+                "description": "remote ref invalid",
+                "data": "a",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "fragment within remote ref",
+        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/integer"},
+        "tests": [
+            {
+                "description": "remote fragment valid",
+                "data": 1,
+                "valid": true
+            },
+            {
+                "description": "remote fragment invalid",
+                "data": "a",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "ref within remote ref",
+        "schema": {
+            "$ref": "https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/refToInteger"
+        },
+        "tests": [
+            {
+                "description": "ref within ref valid",
+                "data": 1,
+                "valid": true
+            },
+            {
+                "description": "ref within ref invalid",
+                "data": "a",
+                "valid": false
+            }
+        ]
+    },
+    {
+        "description": "change resolution scope",
+        "schema": {
+            "id": "https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/",
+            "items": {
+                "id": "folder/",
+                "items": {"$ref": "folderInteger.json"}
+            }
+        },
+        "tests": [
+            {
+                "description": "changed scope ref valid",
+                "data": [[1]],
+                "valid": true
+            },
+            {
+                "description": "changed scope ref invalid",
+                "data": [["a"]],
+                "valid": false
+            }
+        ]
+    }
+]
+
