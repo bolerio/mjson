@@ -318,7 +318,8 @@ public class Json
 	    	StringBuilder content = new StringBuilder();
 	    	char [] buf = new char[1024];
 	    	for (int n = reader.read(buf); n > -1; n = reader.read(buf))
-	    	    content.append(buf);
+	    	    content.append(buf, 0, n);
+//	    	System.out.println("last reaad: " + new StringBuilder(buf))
 	    	return content.toString();
     	}
     	catch (Exception ex)
@@ -506,7 +507,7 @@ public class Json
     				errors = maybeError(errors,Json.make("Number " + param + " is below allowed minimum " + min));    				
     			if (!Double.isNaN(max) && (value > max || exclusiveMax && value == max))
         			errors = maybeError(errors,Json.make("Number " + param + " is above allowed maximum " + max));
-    			if (!Double.isNaN(multipleOf) && (value / multipleOf) % 1 == 0)
+    			if (!Double.isNaN(multipleOf) && (value / multipleOf) % 1 != 0)
     				errors = maybeError(errors,Json.make("Number " + param + " is not a multiple of  " + multipleOf));    				
     			return errors;
     		}
@@ -515,7 +516,7 @@ public class Json
        	class CheckArray implements Instruction
        	{
        		int min = 0, max = Integer.MAX_VALUE;
-       		boolean uniqueitems;
+       		Boolean uniqueitems = null;
        		Instruction additionalSchema = any;
        		Instruction schema;
        		ArrayList<Instruction> schemas;
@@ -523,14 +524,20 @@ public class Json
     		public Json apply(Json param)
     		{
     			Json errors = null;
-    			if (!param.isArray()) return errors;    			
+    			if (!param.isArray()) return errors;
+				if (schema == null && schemas == null && additionalSchema == null) // no schema specified
+					return errors;    			
     			int size = param.asJsonList().size();
     			for (int i = 0; i < size; i++)
     			{
     				Instruction S = schema != null ? schema
     						: (schemas != null && i < schemas.size()) ? schemas.get(i) : additionalSchema;
-    				errors = maybeError(errors, S.apply(param.at(i)));
-    				if (uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
+    				if (S == null)
+    					errors = maybeError(errors,Json.make("Additional items are not permitted: " + 
+    									param.at(i) + " in " + param.toString(maxchars)));
+    				else
+    					errors = maybeError(errors, S.apply(param.at(i)));
+    				if (uniqueitems != null && uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
     					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
     			}
     			if (size < min || size > max)
@@ -591,7 +598,7 @@ public class Json
         		{    	
         			Json errors = null;
         			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
-        				if (pattern.matcher(e.getKey()).matches())
+        				if (pattern.matcher(e.getKey()).find())
         				{
         					errors = maybeError(errors, schema.apply(e.getValue()));
         					checked.add(e.getKey());
@@ -822,7 +829,8 @@ public class Json
     		if (S.has("maxProperties"))
     			objectCheck.max = S.at("maxProperties").asInteger();
     		
-    		if (!objectCheck.props.isEmpty() || objectCheck.additionalSchema != any ||
+    		if (!objectCheck.props.isEmpty() || !objectCheck.patternProps.isEmpty() || 
+    			objectCheck.additionalSchema != any ||
     			objectCheck.min > 0 || objectCheck.max < Integer.MAX_VALUE)
     			seq.add(objectCheck);
     		
@@ -848,7 +856,8 @@ public class Json
     		if (S.has("maxItems"))
     			arrayCheck.max = S.at("maxItems").asInteger();
     		if (arrayCheck.schema != null || arrayCheck.schemas != null ||
-    			arrayCheck.additionalSchema != any || 
+    			arrayCheck.additionalSchema != any ||
+    			arrayCheck.uniqueitems != null ||
     			arrayCheck.max < Integer.MAX_VALUE || arrayCheck.min > 0)
     			seq.add(arrayCheck);
 

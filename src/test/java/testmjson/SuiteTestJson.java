@@ -48,5 +48,9 @@ public class SuiteTestJson
 			schema.validate(data);
 			throw err;
 		}
+		catch (Throwable t)
+		{
+			System.err.println("Exception while running test " + description + " from " + group);			
+		}
 	}	
 }
