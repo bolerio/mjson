@@ -336,7 +336,7 @@ public class TestSchemas
 //		Json.schema(Json.object(
 //            "$ref","https://raw.githubusercontent.com/json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/refToInteger"
 //        ));
-		Json set = Json.read(readTextResource("/suite/multipleOf.json"));
+		Json set = Json.read(readTextResource("/suite/ref.json"));
 		for (Json one : set.asJsonList())
 		{
 			Json.Schema schema = Json.schema(one.at("schema"));

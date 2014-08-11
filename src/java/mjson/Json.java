@@ -19,6 +19,7 @@
 package mjson;
 
 import java.io.IOException;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -369,7 +370,7 @@ public class Json
     static Json resolveRef(URI base, Json refdoc, URI refuri,  Map<String, Json> resolved, Map<Json, Json> expanded) throws Exception
     {
     	if (refuri.isAbsolute() &&
-    		 (base == null ||
+    		 (base == null || !base.isAbsolute() ||
     			!base.getScheme().equals(refuri.getScheme()) ||
 	    		!base.getHost().equals(refuri.getHost()) ||
 	    		base.getPort() != refuri.getPort() ||
@@ -403,9 +404,14 @@ public class Json
 		if (expanded.containsKey(json)) return json;
 		if (json.isObject())
 		{
+			if (json.has("id") && json.at("id").isString()) // change scope of nest references
+			{
+				base = base.resolve(json.at("id").asString());
+			}
+			
 			if (json.has("$ref"))
 			{
-				URI refuri = makeAbsolute(base, json.at("$ref").asString());
+				URI refuri = base.resolve(json.at("$ref").asString()); // makeAbsolute(base, json.at("$ref").asString());
 				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
@@ -896,10 +902,11 @@ public class Json
     	
     	DefaultSchema(URI uri, Json theschema) 
     	{ 
-    		this.uri = uri; 
     		try
     		{
-    			this.theschema = expandReferences(theschema, theschema, uri, new HashMap<String, Json>(), new IdentityHashMap<Json, Json>());
+        		this.uri = uri == null ? new URI("") : uri;    			
+    			this.theschema = expandReferences(theschema, theschema, this.uri, 
+    								new HashMap<String, Json>(), new IdentityHashMap<Json, Json>());
     		}
     		catch (Exception ex)  { throw new RuntimeException(ex); }
     		this.start = compile(this.theschema, new IdentityHashMap<Json, Instruction>()); 
