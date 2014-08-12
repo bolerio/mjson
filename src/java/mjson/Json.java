@@ -288,19 +288,34 @@ public class Json
      *  <p>
      *  More information about the various JSON schema specifications can be 
      *  found at http://json-schema.org. JSON Schema is an  IETF draft (v4 currently) and 
-     *  our implementation follows this set of specifications. A quick introductions 
-     *  with a few example follows below.  
-     *  </p>
-     *  
-     *  <p>
-     *  A JSON schema is specified as a JSON object that contains keywords defined by the
-     *  specification.
+     *  our implementation follows this set of specifications. A JSON schema is specified 
+     *  as a JSON object that contains keywords defined by the specification. Here are
+     *  a few introductory materials:
+     *  <ul>
+     *  <li>http://jsonary.com/documentation/json-schema/ - 
+     *  a very well-written tutorial covering the whole standard</li>
+     *  <li>http://spacetelescope.github.io/understanding-json-schema/ - 
+     *  online book, tutorial (Python/Ruby based)</li>
+     *  </ul>
      *  </p>
      * @author Borislav Iordanov
      *
      */
     public static interface Schema
     {    	
+    	/**
+    	 * <p>
+    	 * Validate a JSON document according to this schema. The validations attempts to
+    	 * proceed even in the face of errors. The return value is always a <code>Json.object</code>
+    	 * containing the boolean property <code>ok</code>. When <code>ok</code> is <code>true</code>,
+    	 * the return object contains nothing else. When it is <code>false</code>, the return object
+    	 * contains a property <code>errors</code> which is an array of error messages for all
+    	 * detected schema violations.
+    	 * </p>
+    	 * 
+    	 * @param document The input document.
+    	 * @return <code>{"ok":true}</code> or <code>{"ok":false, errors:["msg1", "msg2", ...]}</code>
+    	 */
     	Json validate(Json document);
     	
     	/**
@@ -308,7 +323,7 @@ public class Json
     	 * </p>
     	 * @return A newly created <code>Json</code> conforming to this schema.
     	 */
-    	Json generate(Json options);
+    	//Json generate(Json options);
     }
 
     static String fetchContent(URL url)
