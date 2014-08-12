@@ -328,9 +328,10 @@ public class Json
 
     static String fetchContent(URL url)
     {
+    	java.io.Reader reader = null;
     	try
     	{
-	    	java.io.Reader reader = new java.io.InputStreamReader((java.io.InputStream)url.getContent());
+	    	reader = new java.io.InputStreamReader((java.io.InputStream)url.getContent());
 	    	StringBuilder content = new StringBuilder();
 	    	char [] buf = new char[1024];
 	    	for (int n = reader.read(buf); n > -1; n = reader.read(buf))
@@ -341,6 +342,10 @@ public class Json
     	catch (Exception ex)
     	{
     		throw new RuntimeException(ex);
+    	}
+    	finally
+    	{
+    		if (reader != null) try { reader.close(); } catch (Throwable t) { };
     	}
     }
     
