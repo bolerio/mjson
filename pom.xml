@@ -42,7 +42,7 @@
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
-    <finalName>${artifactId}-${version}</finalName>
+    <finalName>${project.artifactId}-${project.version}</finalName>
     <testOutputDirectory>target/test-classes</testOutputDirectory>
     <sourceDirectory>src/java</sourceDirectory>
     <plugins>
@@ -125,6 +125,11 @@
         <version>2.17</version>
         <configuration>
         <testSourceDirectory>src/test/java</testSourceDirectory>
+        <testResources>
+          <testResource>
+            <directory>${project.basedir}/src/test/resources</directory>
+          </testResource>
+        </testResources>
         </configuration>        
       </plugin>    
     </plugins>
