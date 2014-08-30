@@ -2,6 +2,7 @@ mJson is an extremely lightweight Java JSON library with a very concise API. The
 
 ### Features
 
+* Full support for [JSON Schema Draft 4](http://json-schema.org/) validation
 * Single universal type - everything is a `Json`, no type casting
 * Single factory method, no new operators, just call `Json.make(anything here)`
 * Fast, hand-coded parsing
@@ -22,7 +23,7 @@ Go see a **[Complete Tour of the API](https://github.com/bolerio/mjson/wiki/A-To
 (get in touch if you want to help!)
 
 1. Traversal API, with pattern-matching
-2. JSON Schema supports for validation and template generation
+2. Extend JSON Schema support for template generation
 
 **[Goto mJson Official Website](http://bolerio.github.io/mjson/)**
 
