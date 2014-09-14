@@ -8,7 +8,7 @@
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.3</version>
   <url>http://sharegov.org/mjson</url>
   <description>A concise, loosely typed Java API for Json</description>
 
@@ -109,6 +109,13 @@
     <plugin>
       <groupId>org.sonatype.plugins</groupId>
       <artifactId>nexus-staging-maven-plugin</artifactId>
+      <configuration>
+        <!-- The Base URL of Nexus instance where we want to stage
+        <nexusUrl>http://localhost:8081/nexus/</nexusUrl>
+ -->
+        <!-- The server "id" element from settings to use authentication from  -->
+        <serverId>ossrh</serverId>
+      </configuration>
       <executions>
         <execution>
           <id>default-deploy</id>
