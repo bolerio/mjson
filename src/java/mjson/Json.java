@@ -228,6 +228,25 @@ import java.util.regex.Pattern;
  * method.
  * </p>
  * 
+ * <h3>Validating with JSON Schema</h3>
+ * 
+ * <p>
+ * Since version 1.3, mJson supports JSON Schema, draft 4. A schema is represented by the internal
+ * class {@link mjson.Json.Schema}. To perform a validation, you have a instantiate a <code>Json.Schema</code>
+ * using the factory method {@link mjson.Json.schema} and then call its <code>validate</code> method
+ * on a JSON instance:
+ * </p>
+ *  
+ * <pre><code>
+ * import mjson.Json;
+ * import static mjson.Json.*;
+ * ...
+ * Json inputJson = Json.read(inputString);
+ * Json schema = Json.schema(new URI("http://mycompany.com/schemas/model"));
+ * Json errors = schema.validate(inputJson);
+ * for (Json error : errors.asJsonList())
+ * 	   System.out.println("Validation error " + err);
+ * </code></pre>
  * @author Borislav Iordanov
  * @version 1.3
  */
@@ -269,12 +288,62 @@ public class Json
 	 */
     public static interface Factory 
     {
+    	/**
+    	 * Construct and return an object representing JSON <code>null</code>. Implementations are
+    	 * free to cache a return the same instance. The resulting value must return
+    	 * <code>true</code> from <code>isNull()</code> and <code>null</code> from
+    	 * <code>getValue()</code>.
+    	 */
         Json nil();
+        
+        /**
+         * Construct and return a JSON boolean. The resulting value must return
+    	 * <code>true</code> from <code>isBoolean()</code> and the passed
+    	 * in parameter from <code>getValue()</code>.
+         * @param value The boolean value.
+         * @return A JSON with <code>isBoolean() == true</code>. Implementations
+         * are free to cache and return the same instance for true and false.
+         */
         Json bool(boolean value);
+        
+        /**
+         * Construct and return a JSON string. The resulting value must return
+    	 * <code>true</code> from <code>isString()</code> and the passed
+    	 * in parameter from <code>getValue()</code>.
+         * @param value The string to wrap as a JSON value.
+         */
         Json string(String value);
+        
+        /**
+         * Construct and return a JSON number. The resulting value must return
+    	 * <code>true</code> from <code>isNumber()</code> and the passed
+    	 * in parameter from <code>getValue()</code>.
+    	 *  
+         * @param value
+         * @return
+         */
         Json number(Number value);
+        
+        /**
+         * Construct and return a JSON object. The resulting value must return
+    	 * <code>true</code> from <code>isObject()</code> and an implementation
+    	 * of <code>java.util.Map</code> from <code>getValue()</code>.
+         */
         Json object();
+
+        /**
+         * Construct and return a JSON object. The resulting value must return
+    	 * <code>true</code> from <code>isArray()</code> and an implementation
+    	 * of <code>java.util.List</code> from <code>getValue()</code>.
+         */
         Json array();
+        
+        /**
+         * Construct and return a JSON object. The resulting value can be of any
+         * JSON type. The method is responsible for examining the type of its
+         * argument and performing an appropriate mapping to a <code>Json</code>
+         * instance. 
+         */        
         Json make(Object anything);
     }
 
@@ -1089,6 +1158,18 @@ public class Json
 	 * this method will never return the actual Java <code>null</code>.
 	 */
 	public static Json read(String jsonAsString) { return (Json)new Reader().read(jsonAsString); }
+
+	/**
+	 * <p>
+	 * Parse a JSON entity from a <code>URL</code>. 
+	 * </p>
+	 * 
+	 * @param location A valid URL where to load a JSON document from. Cannot be <code>null</code>.
+	 * @return The JSON entity parsed: an object, array, string, number or boolean, or null. Note that
+	 * this method will never return the actual Java <code>null</code>.
+	 */
+	public static Json read(URL location) { return (Json)new Reader().read(fetchContent(location)); }
+	
 	/**
 	 * <p>
 	 * Parse a JSON entity from a {@link CharacterIterator}. 
