@@ -18,6 +18,8 @@ mJson is an extremely lightweight Java JSON library with a very concise API. The
 
 Go see a **[Complete Tour of the API](https://github.com/bolerio/mjson/wiki/A-Tour-of-the-API)**
 
+Read my tutorial blog on **[JSON Schema](http://www.kobrix.blogspot.com/2014/09/jayson-skima-validating-javascript.html)**
+
 ### Wish List
 
 (get in touch if you want to help!)
