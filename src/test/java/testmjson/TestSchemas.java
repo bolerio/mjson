@@ -14,7 +14,6 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 

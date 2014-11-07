@@ -135,7 +135,7 @@ import java.util.regex.Pattern;
  * 
  * <p>
  * If you want to add properties to an object in bulk or append a sequence of elements to array, 
- * use the {@link #with(Json)} method. When used on an object, this method expects another
+ * use the {@link #with(Json, Json...opts)} method. When used on an object, this method expects another
  * object as its argument and it will copy all properties of that argument into itself. Similarly,
  * when called on array, the method expects another array and it will append all elements of its
  * argument to itself.
@@ -233,7 +233,7 @@ import java.util.regex.Pattern;
  * <p>
  * Since version 1.3, mJson supports JSON Schema, draft 4. A schema is represented by the internal
  * class {@link mjson.Json.Schema}. To perform a validation, you have a instantiate a <code>Json.Schema</code>
- * using the factory method {@link mjson.Json.schema} and then call its <code>validate</code> method
+ * using the factory method {@link mjson.Json.Schema} and then call its <code>validate</code> method
  * on a JSON instance:
  * </p>
  *  
@@ -319,8 +319,8 @@ public class Json
     	 * <code>true</code> from <code>isNumber()</code> and the passed
     	 * in parameter from <code>getValue()</code>.
     	 *  
-         * @param value
-         * @return
+         * @param value The numeric value.
+         * @return Json instance representing that value.
          */
         Json number(Number value);
         
@@ -414,8 +414,8 @@ public class Json
     	}
     	finally
     	{
-    		if (reader != null) try { reader.close(); } catch (Throwable t) { };
-    	}
+    		if (reader != null) try { reader.close(); } catch (Throwable t) { }
+        }
     }
     
     static Json resolvePointer(String pointerRepresentation, Json top)
@@ -544,9 +544,9 @@ public class Json
     
     static class DefaultSchema implements Schema
     {
-    	static interface Instruction extends Function<Json, Json>{};
+    	static interface Instruction extends Function<Json, Json>{}
 
-    	static Json maybeError(Json errors, Json E) 
+        static Json maybeError(Json errors, Json E)
     		{ return E == null ? errors : (errors == null ? Json.array() : errors).with(E); }
 
     	// Anything is valid schema
@@ -1019,9 +1019,8 @@ public class Json
     	
     	public Json generate(Json options)
     	{
-    		Json result = Json.nil();
-    		// TODO...
-    		return result;
+            // TODO...
+    		return Json.nil();
     	}
     }
     
@@ -1265,9 +1264,9 @@ public class Json
 	 * @param maxCharacters The maximum number of characters for
 	 * the string representation.
 	 */
-	public String toString(int maxCharacters) { return toString(); };
-	
-	/**
+	public String toString(int maxCharacters) { return toString(); }
+
+    /**
 	 * <p>Explicitly set the parent of this element. The parent is presumably an array
 	 * or an object. Normally, there's no need to call this method as the parent is
 	 * automatically set by the framework. You may need to call it however, if you implement
@@ -1516,8 +1515,20 @@ public class Json
 	 * Json object or array.
 	 * @return this
 	 */
-	public Json with(Json object) { throw new UnsupportedOperationException(); }
-	
+	public Json with(Json object, Json...options) { throw new UnsupportedOperationException(); }
+
+    /**
+     * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
+     * argument converted to <code>Json</code> first.
+     */
+    public Json with(Json object, Object...options)
+    {
+        Json [] jopts = new Json[options.length];
+        for (int i = 0; i < jopts.length; i++)
+            jopts[i] = make(options[i]);
+        return with(object, jopts);
+    }
+
 	/**
 	 * <p>Return the underlying value of this <code>Json</code> entity. The actual value will 
 	 * be a Java Boolean, String, Number, Map, List or null. For complex entities (objects
@@ -1689,7 +1700,38 @@ public class Json
 	//-------------------------------------------------------------------------
 	// END OF PUBLIC INTERFACE
 	//-------------------------------------------------------------------------
-		
+
+    /**
+     * Return an object representing the complete configuration
+     * of a merge. The properties of the object represent paths
+     * of the JSON structure being merged and the values represent
+     * the set of options that apply to each path.
+     */
+    protected Json collectWithOptions(Json...options)
+    {
+        Json result = object();
+        for (Json opt : options)
+        {
+            if (opt.isString())
+                result.at("", object()).set(opt.asString(), true);
+            else
+            {
+                Json forPaths = opt.at("for", array(""));
+                if (!forPaths.isArray())
+                    forPaths = array(forPaths);
+                for (Json path : forPaths.asJsonList())
+                {
+                    Json at_path = result.at(path.asString(), object());
+                    at_path.set("merge", opt.is("merge", true));
+                    at_path.set("dup", opt.is("dup", true));
+                    at_path.set("sort", opt.is("sort", true));
+                    at_path.set("compareBy", opt.at("compareBy", nil()));
+                }
+            }
+        }
+        return result;
+    }
+
 	static class NullJson extends Json
 	{
 		NullJson() {}
@@ -1764,8 +1806,9 @@ public class Json
 				return toString();
 			else
 				return '"' + escaper.escapeJsonString(val.subSequence(0,  maxCharacters)) + "...\"";
-		};		
-		public int hashCode() { return val.hashCode(); }
+		}
+
+        public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
 		{			
 			return x instanceof StringJson && ((StringJson)x).val.equals(val); 
@@ -1849,11 +1892,114 @@ public class Json
 		public Json add(Json el) { L.add(el); el.enclosing = this; return this; }
 		public Json remove(Json el) { L.remove(el); el.enclosing = null; return this; }
 
-		public Json with(Json object) 
+        boolean isEqualJson(Json left, Json right)
+        {
+            if (left == null)
+                return right == null;
+            else
+                return left.equals(right);
+        }
+
+        boolean isEqualJson(Json left, Json right, Json fields)
+        {
+            if (fields.isNull())
+                return left.equals(right);
+            else if (fields.isString())
+                return isEqualJson(resolvePointer(fields.asString(), left),
+                                   resolvePointer(fields.asString(), right));
+            else if (fields.isArray())
+            {
+                for (Json field : fields.asJsonList())
+                    if (!isEqualJson(resolvePointer(field.asString(), left),
+                            resolvePointer(field.asString(), right)))
+                        return false;
+                return true;
+            }
+            else
+                throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
+        }
+
+        int compareJson(Json left, Json right, Json fields)
+        {
+            if (fields.isNull())
+                return ((Comparable)left.getValue()).compareTo(right.getValue());
+            else if (fields.isString())
+            {
+                Json leftProperty = resolvePointer(fields.asString(), left);
+                Json rightProperty = resolvePointer(fields.asString(), right);
+                return ((Comparable)leftProperty).compareTo(rightProperty);
+            }
+            else if (fields.isArray())
+            {
+                for (Json field : fields.asJsonList())
+                {
+                    Json leftProperty = resolvePointer(field.asString(), left);
+                    Json rightProperty = resolvePointer(field.asString(), right);
+                    int result = ((Comparable) leftProperty).compareTo(rightProperty);
+                    if (result != 0)
+                        return result;
+                }
+                return 0;
+            }
+            else
+                throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
+        }
+
+        Json withOptions(Json array, Json allOptions, String path)
+        {
+            Json opts = allOptions.at(path, object());
+            boolean dup = opts.is("dup", true);
+            Json compareBy = opts.at("compareBy", nil());
+            if (opts.is("sort", true))
+            {
+                int thisIndex = 0, thatIndex = 0;
+                while (thatIndex < array.asJsonList().size())
+                {
+                    Json thatElement = array.at(thatIndex);
+                    if (thisIndex == L.size())
+                    {
+                        L.add(dup ? thatElement.dup() : thatElement);
+                        thisIndex++;
+                        continue;
+                    }
+                    int compared = compareJson(at(thisIndex), thatElement, compareBy);
+                    if (compared < 0) // this < that
+                        thisIndex++;
+                    else if (compared > 0) // this > that
+                    {
+                        L.add(thisIndex, dup ? thatElement.dup() : thatElement);
+                        thatIndex++;
+                    }
+                }
+            }
+            else
+            {
+                for (Json thatElement : array.asJsonList())
+                {
+                    boolean present = false;
+                    for (Json thisElement : L)
+                        if (isEqualJson(thisElement, thatElement, compareBy))
+                        {
+                            present = true;
+                            break;
+                        }
+                    if (!present)
+                        L.add(dup ? thatElement.dup() : thatElement);
+                }
+            }
+            return this;
+        }
+
+		public Json with(Json object, Json...options)
 		{
 			if (object == null) return this;
 			if (!object.isArray())
 				add(object);
+            else if (options.length > 0)
+            {
+                Json O = collectWithOptions(options);
+                return withOptions(object, O, "");
+            }
 			else
 				// what about "enclosing" here? we don't have a provision where a Json 
 				// element belongs to more than one enclosing elements...
@@ -1949,12 +2095,44 @@ public class Json
 			return object.get(property);
 		}
 
-		public Json with(Json x)
+        protected Json withOptions(Json other, Json allOptions, String path)
+        {
+            Json options = allOptions.at(path, object());
+            boolean duplicate = options.is("dup", true);
+            if (options.is("merge", true))
+            {
+                for (Map.Entry<String, Json> e : other.asJsonMap().entrySet())
+                {
+                    Json local = object.get(e.getKey());
+                    if (local instanceof ObjectJson)
+                        ((ObjectJson)local).withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
+                    else if (local instanceof ArrayJson)
+                        ((ArrayJson)local).withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
+                    else
+                        set(e.getKey(), duplicate ? e.getValue().dup() : e.getValue());
+                }
+            }
+            else if (duplicate)
+                for (Map.Entry<String, Json> e : other.asJsonMap().entrySet())
+                    set(e.getKey(), e.getValue().dup());
+            else
+                for (Map.Entry<String, Json> e : other.asJsonMap().entrySet())
+                    set(e.getKey(), e.getValue());
+            return this;
+        }
+
+		public Json with(Json x, Json...options)
 		{
 			if (x == null) return this;			
 			if (!x.isObject())
 				throw new UnsupportedOperationException();
-			object.putAll(((ObjectJson)x).object);
+            if (options.length > 0)
+            {
+                Json O = collectWithOptions(options);
+                return withOptions(x, O, "");
+            }
+            else for (Map.Entry<String, Json> e : x.asJsonMap().entrySet())
+                set(e.getKey(), e.getValue());
 			return this;
 		}
 		
@@ -2493,4 +2671,9 @@ public class Json
 	    }
 	}
 	// END Reader
+
+    public static void main(String []argv)
+    {
+        System.out.println("JSON main");
+    }
 }
