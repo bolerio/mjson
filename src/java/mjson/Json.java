@@ -415,7 +415,7 @@ public class Json
     	finally
     	{
     		if (reader != null) try { reader.close(); } catch (Throwable t) { }
-        }
+    	}
     }
     
     static Json resolvePointer(String pointerRepresentation, Json top)
@@ -546,7 +546,7 @@ public class Json
     {
     	static interface Instruction extends Function<Json, Json>{}
 
-        static Json maybeError(Json errors, Json E)
+    	static Json maybeError(Json errors, Json E) 
     		{ return E == null ? errors : (errors == null ? Json.array() : errors).with(E); }
 
     	// Anything is valid schema
@@ -1019,7 +1019,7 @@ public class Json
     	
     	public Json generate(Json options)
     	{
-            // TODO...
+    		// TODO...
     		return Json.nil();
     	}
     }
@@ -1250,9 +1250,10 @@ public class Json
 	// end of static utility method section
 
 	Json enclosing = null;
+	String parentKey = null;
 	
 	protected Json() { }
-	protected Json(Json enclosing) { this.enclosing = enclosing; }
+	protected Json(Json enclosing) { this.enclosing = enclosing; this.parentKey=null;}
 	
 	/**
 	 * <p>Return a string representation of <code>this</code> that does 
@@ -1264,9 +1265,22 @@ public class Json
 	 * @param maxCharacters The maximum number of characters for
 	 * the string representation.
 	 */
-	public String toString(int maxCharacters) { return toString(); }
-
-    /**
+	public String toString(int maxCharacters) { return toString(); };
+	
+	/**
+	 * Returns the key (property) in the parent Json object that will return this object
+	 * May return null for an array, or an object created in a way that the parent key could not be derived.
+	 * @return
+	 */
+	public String getParentKey(){return this.parentKey;}
+	
+	/**
+	 * Set the parentKey value. This does not set the parent itself, but records the key (property) on the parent to which this object belongs.
+	 * This is set automatically in most cases, this method is for special cases
+	 * @param parentKey
+	 */
+	public void setParentKey(String parentKey){this.parentKey=parentKey;}
+	/**
 	 * <p>Explicitly set the parent of this element. The parent is presumably an array
 	 * or an object. Normally, there's no need to call this method as the parent is
 	 * automatically set by the framework. You may need to call it however, if you implement
@@ -1275,7 +1289,7 @@ public class Json
 	 *  
 	 * @param enclosing The parent element.
 	 */
-	public void attachTo(Json enclosing) { this.enclosing = enclosing; }
+	public void attachTo(Json enclosing) { this.enclosing = enclosing; this.parentKey=null;}
 	
 	/**
 	 * <p>Return the <code>Json</code> entity, if any, enclosing this 
@@ -1516,8 +1530,8 @@ public class Json
 	 * @return this
 	 */
 	public Json with(Json object, Json...options) { throw new UnsupportedOperationException(); }
-
-    /**
+	
+	/**
      * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
      * argument converted to <code>Json</code> first.
      */
@@ -1700,7 +1714,7 @@ public class Json
 	//-------------------------------------------------------------------------
 	// END OF PUBLIC INTERFACE
 	//-------------------------------------------------------------------------
-
+		
     /**
      * Return an object representing the complete configuration
      * of a merge. The properties of the object represent paths
@@ -1806,9 +1820,8 @@ public class Json
 				return toString();
 			else
 				return '"' + escaper.escapeJsonString(val.subSequence(0,  maxCharacters)) + "...\"";
-		}
-
-        public int hashCode() { return val.hashCode(); }
+		};		
+		public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
 		{			
 			return x instanceof StringJson && ((StringJson)x).val.equals(val); 
@@ -1901,7 +1914,7 @@ public class Json
         }
 
         boolean isEqualJson(Json left, Json right, Json fields)
-        {
+		{
             if (fields.isNull())
                 return left.equals(right);
             else if (fields.isString())
@@ -2102,7 +2115,7 @@ public class Json
             if (options.is("merge", true))
             {
                 for (Map.Entry<String, Json> e : other.asJsonMap().entrySet())
-                {
+		{
                     Json local = object.get(e.getKey());
                     if (local instanceof ObjectJson)
                         ((ObjectJson)local).withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
@@ -2141,6 +2154,7 @@ public class Json
 			if (property == null)
 				throw new IllegalArgumentException("Null property names are not allowed, value is " + el);
 			el.enclosing = this;
+			el.parentKey=property;
 			object.put(property, el);
 			return this;
 		}
@@ -2172,6 +2186,7 @@ public class Json
 		}
 		@Override
 		public Map<String, Json> asJsonMap() { return object; }
+		
 		
 		public String toString()
 		{
