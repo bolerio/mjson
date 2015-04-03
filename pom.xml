@@ -5,10 +5,16 @@
     <artifactId>oss-parent</artifactId>
     <version>7</version>
   </parent>
+  <properties>
+    <packageit>bundle</packageit>
+    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.namespace>mjson</bundle.namespace>    
+  </properties>      
+  <packaging>${packageit}</packaging>  
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
-  <version>1.3</version>
+  <version>1.4-SNAPSHOT</version>
   <url>http://sharegov.org/mjson</url>
   <description>A concise, loosely typed Java API for Json</description>
 
@@ -129,6 +135,21 @@
           </testResources>
         </configuration>        
       </plugin>    
+    <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+ 		  <manifestLocation>META-INF</manifestLocation>        
+          <instructions>
+            <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
+            <Bundle-Name>${project.name}</Bundle-Name>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <Export-Package>mjson</Export-Package>
+          </instructions>
+        </configuration>
+    </plugin>           
     </plugins>
   </build>
   
