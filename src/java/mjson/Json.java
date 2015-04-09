@@ -248,7 +248,7 @@ import java.util.regex.Pattern;
  * 	   System.out.println("Validation error " + err);
  * </code></pre>
  * @author Borislav Iordanov
- * @version 1.3
+ * @version 1.4
  */
 public class Json
 {
@@ -1110,7 +1110,13 @@ public class Json
     // TODO: maybe use initialValue thread-local method to attach global factory by default here... 
     private static ThreadLocal<Factory> threadFactory = new ThreadLocal<Factory>();
     
-    private static Factory factory() 
+    /**
+     * <p>Return the {@link Factory} currently in effect. This is the factory that the {@link #make(Object)} method
+     * will dispatch on upon determining the type of its argument. If you already know the type
+     * of element to construct, you can avoid the type introspection implicit to the make method
+     * and call the factory directly. This will result in an optimization. </p>
+     */
+    public static Factory factory() 
     {
     	Factory f = threadFactory.get();
     	return f != null ? f : globalFactory;
