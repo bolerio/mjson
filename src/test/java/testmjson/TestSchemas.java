@@ -198,6 +198,7 @@ public class TestSchemas
 				}
 				catch (Throwable t)
 				{
+					Json.schema(one.at("schema"));
 					throw new RuntimeException("While adding tests from file " + test.getKey() + " - " + one, t);
 				}
 			}

@@ -442,16 +442,26 @@ public class Json
     static URI makeAbsolute(URI base, String ref) throws Exception
     {
     	URI refuri;
-    	if (base != null && !new URI(ref).isAbsolute())
+    	if (base != null && base.getAuthority() != null && !new URI(ref).isAbsolute())
     	{
-    		StringBuilder sb = new StringBuilder()
-    			.append(base.getScheme()).append("://").append(base.getHost());
-    		if (base.getPort() > -1)
-    			sb.append(":").append(Integer.toString(base.getPort()));
+    		StringBuilder sb = new StringBuilder();
+    		if (base.getScheme() != null)
+    			sb.append(base.getScheme()).append("://");
+    		sb.append(base.getAuthority());
     		if (!ref.startsWith("/"))
-    			sb.append(base.getPath()).append(ref.startsWith("#") ? "" : "/");
+    		{
+    			if (ref.startsWith("#"))
+    				sb.append(base.getPath());
+    			else
+    			{
+	    			int slashIdx = base.getPath().lastIndexOf('/');
+	    			sb.append(slashIdx == -1 ? base.getPath() : base.getPath().substring(0,  slashIdx)).append("/");
+    			}
+    		}
 			refuri = new URI(sb.append(ref).toString());
     	}
+    	else if (base != null)
+    		refuri = base.resolve(ref);
     	else
     		refuri = new URI(ref);
    		return refuri;
@@ -501,7 +511,7 @@ public class Json
 			
 			if (json.has("$ref"))
 			{
-				URI refuri = base.resolve(json.at("$ref").asString()); // makeAbsolute(base, json.at("$ref").asString());
+				URI refuri = makeAbsolute(base, json.at("$ref").asString()); // base.resolve(json.at("$ref").asString());
 				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
