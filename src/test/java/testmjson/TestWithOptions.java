@@ -50,7 +50,7 @@ public class TestWithOptions
         Json x2 = object("id", 4, "name", "Hanna");
         Json a1 = array(object("person", x1));
         Json a2 = array(object("person", x2));
-        a1.with(a2);
+        a1.with(a2, new Json[0]);
         Assert.assertEquals(2, a1.asJsonList().size());
         a1 = array(object("person", x1));
         a1.with(a2, object("compareBy", "id"));

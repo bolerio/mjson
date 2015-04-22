@@ -19,7 +19,6 @@
 package mjson;
 
 import java.io.IOException;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -35,6 +34,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -467,21 +467,30 @@ public class Json
    		return refuri;
     }
     
-    static Json resolveRef(URI base, Json refdoc, URI refuri,  Map<String, Json> resolved, Map<Json, Json> expanded) throws Exception
+    static Json resolveRef(URI base, 
+    					   Json refdoc, 
+    					   URI refuri,  
+    					   Map<String, Json> resolved, 
+    					   Map<Json, Json> expanded,
+    					   Function<URI, Json> uriResolver) throws Exception
     {
     	if (refuri.isAbsolute() &&
     		 (base == null || !base.isAbsolute() ||
     			!base.getScheme().equals(refuri.getScheme()) ||
-	    		!base.getHost().equals(refuri.getHost()) ||
+	    		!Objects.equals(base.getHost(), refuri.getHost()) ||
 	    		base.getPort() != refuri.getPort() ||
 	    		!base.getPath().equals(refuri.getPath())))
     	{
-    		refuri = refuri.normalize();
-    		URI docuri = new URI(refuri.getScheme() + "://" + refuri.getHost() + 
+    		URI docuri = null;
+    		refuri = refuri.normalize();    		
+    		if (refuri.getHost() == null)
+    			docuri = new URI(refuri.getScheme() + ":" + refuri.getPath());
+    		else 
+    			docuri = new URI(refuri.getScheme() + "://" + refuri.getHost() + 
     				((refuri.getPort() > -1) ? ":" + refuri.getPort() : "") +
     				refuri.getPath());	    		
-    		refdoc = Json.read(fetchContent(docuri.toURL()));
-    		refdoc = expandReferences(refdoc, refdoc, docuri, resolved, expanded);
+    		refdoc = uriResolver.apply(docuri);
+    		refdoc = expandReferences(refdoc, refdoc, docuri, resolved, expanded, uriResolver);
     	}
     	if (refuri.getFragment() == null)
     		return refdoc;
@@ -499,7 +508,12 @@ public class Json
      * @param done
      * @return
      */
-	static Json expandReferences(Json json, Json topdoc, URI base, Map<String, Json> resolved, Map<Json, Json> expanded) throws Exception
+	static Json expandReferences(Json json, 
+								 Json topdoc, 
+								 URI base, 
+								 Map<String, Json> resolved, 
+								 Map<Json, Json> expanded,
+								 Function<URI, Json> uriResolver) throws Exception
 	{
 		if (expanded.containsKey(json)) return json;
 		if (json.isObject())
@@ -515,9 +529,9 @@ public class Json
 				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
-					ref = resolveRef(base, topdoc, refuri, resolved, expanded);
+					ref = resolveRef(base, topdoc, refuri, resolved, expanded, uriResolver);
 					resolved.put(refuri.toString(), ref);					
-					ref = expandReferences(ref, topdoc, base, resolved, expanded);
+					ref = expandReferences(ref, topdoc, base, resolved, expanded, uriResolver);
 					resolved.put(refuri.toString(), ref);
 				}
 				json = ref;
@@ -526,8 +540,8 @@ public class Json
 			{
 				Json O = Json.object();
 				for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
-					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded));
-				json.with(O);
+					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded, uriResolver));
+				json.with(O, new Json[0]);
 			}
 		}
 		else if (json.isArray())
@@ -536,7 +550,7 @@ public class Json
 			for (int i = 0; i < json.asJsonList().size(); i++)
 			{
 				//A.add(expandReferences(j, topdoc, base, resolved));
-				Json el = expandReferences(json.at(i), topdoc, base, resolved, expanded);
+				Json el = expandReferences(json.at(i), topdoc, base, resolved, expanded, uriResolver);
 				json.set(i, el);				
 			}
 //			return A;
@@ -557,7 +571,7 @@ public class Json
     	static interface Instruction extends Function<Json, Json>{}
 
         static Json maybeError(Json errors, Json E)
-    		{ return E == null ? errors : (errors == null ? Json.array() : errors).with(E); }
+    		{ return E == null ? errors : (errors == null ? Json.array() : errors).with(E, new Json[0]); }
 
     	// Anything is valid schema
     	static Instruction any = new Instruction() { public Json apply(Json param) { return null; } };
@@ -1008,16 +1022,25 @@ public class Json
     	Json theschema;
     	Instruction start;
     	
-    	DefaultSchema(URI uri, Json theschema) 
+    	DefaultSchema(URI uri, Json theschema, Function<URI, Json> relativeReferenceResolver) 
     	{ 
     		try
     		{
-        		this.uri = uri == null ? new URI("") : uri;    			
-    			this.theschema = expandReferences(theschema, theschema, this.uri, 
-    								new HashMap<String, Json>(), new IdentityHashMap<Json, Json>());
+        		this.uri = uri == null ? new URI("") : uri;
+    			if (relativeReferenceResolver == null)
+					relativeReferenceResolver = docuri -> {
+						try { return Json.read(fetchContent(docuri.toURL())); } 
+						catch(Exception ex) { throw new RuntimeException(ex); }
+					};
+    			this.theschema = expandReferences(theschema, 
+    											  theschema, 
+    											  this.uri, 
+    											  new HashMap<String, Json>(), 
+    											  new IdentityHashMap<Json, Json>(),
+    											  relativeReferenceResolver);
     		}
     		catch (Exception ex)  { throw new RuntimeException(ex); }
-    		this.start = compile(this.theschema, new IdentityHashMap<Json, Instruction>()); 
+    		this.start = compile(this.theschema, new IdentityHashMap<Json, Instruction>());    		
     	}
     	    	    	
     	public Json validate(Json document)
@@ -1036,20 +1059,25 @@ public class Json
     
     public static Schema schema(Json S)
     {
-    	return new DefaultSchema(null, S);
+    	return new DefaultSchema(null, S, null);
     }
     
     public static Schema schema(URI uri)
     {
-    	try { return new DefaultSchema(uri, Json.read(Json.fetchContent(uri.toURL()))); }
-    	catch (Exception ex) { throw new RuntimeException(ex); }
+    	return schema(uri, null);
+    }
+    
+    public static Schema schema(URI uri, Function<URI, Json> relativeReferenceResolver)
+    {
+    	try { return new DefaultSchema(uri, Json.read(Json.fetchContent(uri.toURL())), relativeReferenceResolver); }
+    	catch (Exception ex) { throw new RuntimeException(ex); }    	
     }
     
     public static Schema schema(Json S, URI uri)
     {
-    	return new DefaultSchema(uri, S);
+    	return new DefaultSchema(uri, S, null);
     }
-    
+        
     public static class DefaultFactory implements Factory
     {
         public Json nil() { return Json.topnull; }
