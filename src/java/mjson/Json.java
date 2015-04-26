@@ -414,7 +414,7 @@ public class Json
     	}
     	finally
     	{
-    		if (reader != null) try { reader.close(); } catch (IOException iox) { }
+    		if (reader != null) try { reader.close(); } catch (IOException iox) { throw new MJsonException(iox); }
         }
     }
     
