@@ -1137,7 +1137,7 @@ public class Json
                 return A;
             }
             else
-                throw new IllegalArgumentException("Don't know how to convert to Json : " + anything);
+                throw new MJsonException("Don't know how to convert to Json : " + anything);
         }  
     }
     
@@ -1243,7 +1243,7 @@ public class Json
 	{
 		Json j = object();
 		if (args.length % 2 != 0)
-			throw new IllegalArgumentException("An even number of arguments is expected.");
+			throw new MJsonException("An even number of arguments is expected.");
 		for (int i = 0; i < args.length; i++)
 			j.set(args[i].toString(), factory().make(args[++i]));
 		return j;
@@ -1281,10 +1281,9 @@ public class Json
 	 * 
 	 * @param anything
 	 * @return The <code>Json</code>. This method will never return <code>null</code>. It will
-	 * throw an {@link IllegalArgumentException} if it doesn't know how to convert the argument
+	 * throw an {@link MJsonException} if it doesn't know how to convert the argument
 	 * to a <code>Json</code> instance.
-	 * @throws IllegalArgumentException when the concrete type of the parameter is
-	 * unknown.
+	 * @throws MJsonException when unable to handle the concrete type of the parameter
 	 */
 	public static Json make(Object anything) 
 	{
@@ -1960,7 +1959,7 @@ public class Json
                 return true;
             }
             else
-                throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
+                throw new MJsonException("Compare by options should be either a property name or an array of property names: " + fields);
         }
 
         int compareJson(Json left, Json right, Json fields)
@@ -1986,7 +1985,7 @@ public class Json
                 return 0;
             }
             else
-                throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
+                throw new MJsonException("Compare by options should be either a property name or an array of property names: " + fields);
         }
 
         Json withOptions(Json array, Json allOptions, String path)
@@ -2183,7 +2182,7 @@ public class Json
 		public Json set(String property, Json el)
 		{
 			if (property == null)
-				throw new IllegalArgumentException("Null property names are not allowed, value is " + el);
+				throw new MJsonException("Property names cannot be null, value was " + el);
 			el.enclosing = this;
 			object.put(property, el);
 			return this;
