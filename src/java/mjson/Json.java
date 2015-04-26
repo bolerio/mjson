@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
  * instances. Each of the different types of entities supports a different set of operations. However, this class
  * unifies all operations into a single interface so in Java one is always dealing with a single object type: this class. 
  * The approach effectively amounts to dynamic typing where using an unsupported operation won't be detected at
- * compile time, but will throw a runtime {@link UnsupportedOperationException}. It simplifies working with JSON
+ * compile time, but will throw a runtime {@link MJsonException}. It simplifies working with JSON
  * structures considerably and it leads to shorter at cleaner Java code. It makes much easier to work
  * with JSON structure without the need to convert to "proper" Java representation in the form of
  * POJOs and the like. When traversing a JSON, there's no need to type-cast at each step because there's
@@ -1342,7 +1342,7 @@ public class Json
 	 * 
 	 * @param index The index of the desired element.
 	 */
-	public Json at(int index) { throw new UnsupportedOperationException(); }
+	public Json at(int index) { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1350,7 +1350,7 @@ public class Json
 	 * if there's no such property. This method applies only to Json objects.  
 	 * </p>
 	 */
-	public Json at(String property)	{ throw new UnsupportedOperationException(); }
+	public Json at(String property)	{ throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1397,7 +1397,7 @@ public class Json
 	 * 
 	 * @param property The name of the property.
 	 */
-	public boolean has(String property)	{ throw new UnsupportedOperationException(); }
+	public boolean has(String property)	{ throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1411,7 +1411,7 @@ public class Json
 	 * such an instance. 
 	 * @return
 	 */
-	public boolean is(String property, Object value) { throw new UnsupportedOperationException(); }
+	public boolean is(String property, Object value) { throw unsupportedOperation(); }
 
     /**
      * <p>
@@ -1426,7 +1426,7 @@ public class Json
      * such an instance. 
      * @return
      */
-    public boolean is(int index, Object value) { throw new UnsupportedOperationException(); }
+    public boolean is(int index, Object value) { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1435,7 +1435,7 @@ public class Json
 	 * 
 	 * @return this
 	 */
-	public Json add(Json el) { throw new UnsupportedOperationException(); }
+	public Json add(Json el) { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1459,7 +1459,7 @@ public class Json
 	 * @return The property value or <code>null</code> if the object didn't have such
 	 * a property to begin with.
 	 */
-	public Json atDel(String property)	{ throw new UnsupportedOperationException(); }
+	public Json atDel(String property)	{ throw unsupportedOperation(); }
 
 	/**
 	 * <p>
@@ -1470,7 +1470,7 @@ public class Json
 	 * @param index The index of the element to delete.
 	 * @return The element value.
 	 */
-	public Json atDel(int index)	{ throw new UnsupportedOperationException(); }
+	public Json atDel(int index)	{ throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1480,7 +1480,7 @@ public class Json
 	 * @param property The property to be removed.
 	 * @return this
 	 */
-	public Json delAt(String property)	{ throw new UnsupportedOperationException(); }
+	public Json delAt(String property)	{ throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1490,7 +1490,7 @@ public class Json
 	 * @param index The index of the element to delete.
 	 * @return this
 	 */
-	public Json delAt(int index) { throw new UnsupportedOperationException(); }
+	public Json delAt(int index) { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1500,7 +1500,7 @@ public class Json
 	 * @param el The element to delete.
 	 * @return this
 	 */
-	public Json remove(Json el)	{ throw new UnsupportedOperationException(); }
+	public Json remove(Json el)	{ throw unsupportedOperation(); }
 	
 	/**
 	 * <p>
@@ -1523,7 +1523,7 @@ public class Json
 	 * @param value The value of the property.
 	 * @return this
 	 */
-	public Json set(String property, Json value) { throw new UnsupportedOperationException();	}
+	public Json set(String property, Json value) { throw unsupportedOperation();	}
 	
 	/**
 	 * <p>
@@ -1545,7 +1545,7 @@ public class Json
 	 * @param value the new value of the element
 	 * @return this 
 	 */
-	public Json set(int index, Object value) { throw new UnsupportedOperationException(); }	
+	public Json set(int index, Object value) { throw unsupportedOperation(); }	
 	
 	/**
 	 * <p>
@@ -1558,7 +1558,7 @@ public class Json
 	 * Json object or array.
 	 * @return this
 	 */
-	public Json with(Json object, Json...options) { throw new UnsupportedOperationException(); }
+	public Json with(Json object, Json...options) { throw unsupportedOperation(); }
 
     /**
      * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
@@ -1578,70 +1578,70 @@ public class Json
 	 * or arrays), the method will perform a deep copy and extra underlying values recursively 
 	 * for all nested elements.</p>
 	 */
-	public Object getValue() { throw new UnsupportedOperationException(); }
+	public Object getValue() { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return the boolean value of a boolean <code>Json</code> instance. Call
 	 * {@link #isBoolean()} first if you're not sure this instance is indeed a
 	 * boolean.</p>
 	 */
-	public boolean asBoolean() { throw new UnsupportedOperationException(); }
+	public boolean asBoolean() { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return the string value of a string <code>Json</code> instance. Call
 	 * {@link #isString()} first if you're not sure this instance is indeed a
 	 * string.</p>
 	 */
-	public String asString() { throw new UnsupportedOperationException(); }
+	public String asString() { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return the integer value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */
-	public int asInteger() { throw new UnsupportedOperationException(); }
+	public int asInteger() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the float value of a float <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */
-	public float asFloat() { throw new UnsupportedOperationException(); }
+	public float asFloat() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the double value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */
-	public double asDouble() { throw new UnsupportedOperationException(); }
+	public double asDouble() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the long value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */
-	public long asLong() { throw new UnsupportedOperationException(); }
+	public long asLong() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the short value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */
-	public short asShort() { throw new UnsupportedOperationException(); }
+	public short asShort() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the byte value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
 	 * number.</p>
 	 */	
-	public byte asByte() { throw new UnsupportedOperationException(); }
+	public byte asByte() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return the first character of a string <code>Json</code> instance. Call
 	 * {@link #isString()} first if you're not sure this instance is indeed a
 	 * string.</p>
 	 */	
-	public char asChar() { throw new UnsupportedOperationException(); }		
+	public char asChar() { throw unsupportedOperation(); }		
 
 	/**
 	 * <p>Return a map of the properties of an object <code>Json</code> instance. The map
@@ -1649,7 +1649,7 @@ public class Json
 	 * {@link #isObject()} first if you're not sure this instance is indeed a
 	 * <code>Json</code> object.</p>
 	 */	
-	public Map<String, Object> asMap() { throw new UnsupportedOperationException(); }
+	public Map<String, Object> asMap() { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return the underlying map of properties of a <code>Json</code> object. The returned
@@ -1659,7 +1659,7 @@ public class Json
 	 * <code>Json</code> object.
 	 * </p>
 	 */
-	public Map<String, Json> asJsonMap() { throw new UnsupportedOperationException(); }
+	public Map<String, Json> asJsonMap() { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return a list of the elements of a <code>Json</code> array. The list is a clone
@@ -1668,7 +1668,7 @@ public class Json
 	 * <code>Json</code> array.
 	 * </p>  
 	 */
-	public List<Object> asList()  { throw new UnsupportedOperationException(); }
+	public List<Object> asList()  { throw unsupportedOperation(); }
 	
 	/**
 	 * <p>Return the underlying {@link List} representation of a <code>Json</code> array.
@@ -1678,7 +1678,7 @@ public class Json
 	 * <code>Json</code> array.
 	 * </p>
 	 */
-	public List<Json> asJsonList() { throw new UnsupportedOperationException(); }
+	public List<Json> asJsonList() { throw unsupportedOperation(); }
 
 	/**
 	 * <p>Return <code>true</code> if this is a <code>Json</code> null entity 
@@ -2168,7 +2168,7 @@ public class Json
 		{
 			if (x == null) return this;			
 			if (!x.isObject())
-				throw new UnsupportedOperationException();
+				throw unsupportedOperation();
             if (options.length > 0)
             {
                 Json O = collectWithOptions(options);
@@ -2735,10 +2735,16 @@ public class Json
         public MJsonException(Throwable cause) {
             super(cause);
         }
+    }
 
-        protected MJsonException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-            super(message, cause, enableSuppression, writableStackTrace);
-        }
+    protected static final String JSON_CLASS_SIMPLE_NAME = Json.class.getSimpleName();
+    /** Invoked from Json subclasses to indicate unsupported operation call at runtime. */
+    protected MJsonException unsupportedOperation() {
+    	String jsonElementType = this.getClass().getSimpleName();
+    	if (this instanceof Json && jsonElementType.endsWith(JSON_CLASS_SIMPLE_NAME)) {
+    		jsonElementType = jsonElementType.substring(0, jsonElementType.length() - JSON_CLASS_SIMPLE_NAME.length());
+    	}
+    	throw new MJsonException("Unsupported operation on " + jsonElementType + ".");
     }
 
     public static void main(String []argv)
