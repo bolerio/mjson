@@ -410,7 +410,7 @@ public class Json
     	}
     	catch (Exception ex)
     	{
-    		throw new RuntimeException(ex);
+    		throw new MJsonException(ex);
     	}
     	finally
     	{
@@ -433,7 +433,7 @@ public class Json
     		else if (result.isObject())
     			result = result.at(p);
     		else
-    			throw new RuntimeException("Can't resolve pointer " + pointerRepresentation + 
+    			throw new MJsonException("Can't resolve pointer " + pointerRepresentation + 
     					" on document " + top.toString(200));
     	}
     	return result;
@@ -1030,7 +1030,7 @@ public class Json
     			if (relativeReferenceResolver == null)
 					relativeReferenceResolver = docuri -> {
 						try { return Json.read(fetchContent(docuri.toURL())); } 
-						catch(Exception ex) { throw new RuntimeException(ex); }
+						catch(Exception ex) { throw new MJsonException(ex); }
 					};
     			this.theschema = expandReferences(theschema, 
     											  theschema, 
@@ -1039,7 +1039,7 @@ public class Json
     											  new IdentityHashMap<Json, Json>(),
     											  relativeReferenceResolver);
     		}
-    		catch (Exception ex)  { throw new RuntimeException(ex); }
+    		catch (Exception ex)  { throw new MJsonException(ex); }
     		this.start = compile(this.theschema, new IdentityHashMap<Json, Instruction>());    		
     	}
     	    	    	
@@ -1070,7 +1070,7 @@ public class Json
     public static Schema schema(URI uri, Function<URI, Json> relativeReferenceResolver)
     {
     	try { return new DefaultSchema(uri, Json.read(Json.fetchContent(uri.toURL())), relativeReferenceResolver); }
-    	catch (Exception ex) { throw new RuntimeException(ex); }    	
+    	catch (Exception ex) { throw new MJsonException(ex); }    	
     }
     
     public static Schema schema(Json S, URI uri)
@@ -2325,7 +2325,7 @@ public class Json
 	    try {
 	      escapeJsonString(plainText, escapedString);
 	    } catch (IOException e) {
-	      throw new RuntimeException(e);
+	      throw new MJsonException(e);
 	    }
 	    return escapedString.toString();
 	  }
@@ -2445,7 +2445,7 @@ public class Json
 	    private char next() 
 	    {
 	        if (it.getIndex() == it.getEndIndex())
-	            throw new RuntimeException("Reached end of input at the " + 
+	            throw new MJsonException("Reached end of input at the " + 
 	                                       it.getIndex() + "th character.");
 	        c = it.next();
 	        return c;
@@ -2473,7 +2473,7 @@ public class Json
 	        				if (next() == '*' && next() == '/')
 	        						break;
 	        			if (c == CharacterIterator.DONE)
-	        				throw new RuntimeException("Unterminated comment while parsing JSON string.");
+	        				throw new MJsonException("Unterminated comment while parsing JSON string.");
 	        		}
 	        		else if (c == '/')
 	        			while (c != '\n' && c != CharacterIterator.DONE)
@@ -2534,19 +2534,19 @@ public class Json
 	            case ':': token = COLON; break;
 	            case 't':
 	                if (c != 'r' || next() != 'u' || next() != 'e')
-	                	throw new RuntimeException("Invalid JSON token: expected 'true' keyword.");
+	                	throw new MJsonException("Invalid JSON token: expected 'true' keyword.");
 	                next();
 	                token = factory().bool(Boolean.TRUE);
 	                break;
 	            case'f':
 	                if (c != 'a' || next() != 'l' || next() != 's' || next() != 'e')
-	                	throw new RuntimeException("Invalid JSON token: expected 'false' keyword.");
+	                	throw new MJsonException("Invalid JSON token: expected 'false' keyword.");
 	                next();
 	                token = factory().bool(Boolean.FALSE);
 	                break;
 	            case 'n':
 	                if (c != 'u' || next() != 'l' || next() != 'l')
-	                	throw new RuntimeException("Invalid JSON token: expected 'null' keyword.");
+	                	throw new MJsonException("Invalid JSON token: expected 'null' keyword.");
 	                next();
 	                token = nil();
 	                break;
@@ -2555,7 +2555,7 @@ public class Json
 	                if (Character.isDigit(c) || c == '-') {
 	                    token = readNumber();
 	                }
-	                else throw new RuntimeException("Invalid JSON near position: " + it.getIndex());
+	                else throw new MJsonException("Invalid JSON near position: " + it.getIndex());
 	        }
 	        return (T)token;
 	    }
@@ -2564,7 +2564,7 @@ public class Json
 	    {
 	    	Object key = read();
 	    	if (key == null)
-                throw new RuntimeException(
+                throw new MJsonException(
                         "Missing object key (don't forget to put quotes!).");
 	    	else if (key != OBJECT_END)
 	    		return ((Json)key).asString();
@@ -2601,7 +2601,7 @@ public class Json
 	            if (read() == COMMA) 
 	                value = read();
 	            else if (token != ARRAY_END)
-	                throw new RuntimeException("Unexpected token in array " + token);
+	                throw new MJsonException("Unexpected token in array " + token);
 	        }
 	        return ret;
 	    }
@@ -2715,6 +2715,32 @@ public class Json
 	    }
 	}
 	// END Reader
+	
+    /**
+     * Runtime exception thrown by mJson when something goes awry (parsing, Json typecasting, etc...)
+     * @author Taimo Peelo
+     * */
+    public static class MJsonException extends RuntimeException {
+        public MJsonException() {
+            super();
+        }
+
+        public MJsonException(String message) {
+            super(message);
+        }
+
+        public MJsonException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public MJsonException(Throwable cause) {
+            super(cause);
+        }
+
+        protected MJsonException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
+    }
 
     public static void main(String []argv)
     {
