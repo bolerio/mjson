@@ -7,7 +7,7 @@
   </parent>
   <properties>
     <packageit>bundle</packageit>
-    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>mjson</bundle.namespace>    
   </properties>      
   <packaging>${packageit}</packaging>  
@@ -148,7 +148,7 @@
         <configuration>
  		  <manifestLocation>META-INF</manifestLocation>        
           <instructions>
-            <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${project.groupId}-${project.artifactId};singleton:=true</Bundle-SymbolicName>
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>mjson</Export-Package>
