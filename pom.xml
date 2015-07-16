@@ -6,7 +6,7 @@
     <version>7</version>
   </parent>
   <properties>
-    <packageit>bundle</packageit>
+    <packageit>jar</packageit>
     <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>mjson</bundle.namespace>    
   </properties>      
