@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -293,6 +294,8 @@ public class Json
     	 * free to cache a return the same instance. The resulting value must return
     	 * <code>true</code> from <code>isNull()</code> and <code>null</code> from
     	 * <code>getValue()</code>.
+    	 * 
+    	 * @return The representation of a JSON <code>null</code> value.
     	 */
         Json nil();
         
@@ -311,6 +314,7 @@ public class Json
     	 * <code>true</code> from <code>isString()</code> and the passed
     	 * in parameter from <code>getValue()</code>.
          * @param value The string to wrap as a JSON value.
+         * @return A JSON element with the given string as a value.
          */
         Json string(String value);
         
@@ -328,6 +332,8 @@ public class Json
          * Construct and return a JSON object. The resulting value must return
     	 * <code>true</code> from <code>isObject()</code> and an implementation
     	 * of <code>java.util.Map</code> from <code>getValue()</code>.
+    	 * 
+    	 * @return An empty JSON object.
          */
         Json object();
 
@@ -335,6 +341,8 @@ public class Json
          * Construct and return a JSON object. The resulting value must return
     	 * <code>true</code> from <code>isArray()</code> and an implementation
     	 * of <code>java.util.List</code> from <code>getValue()</code>.
+    	 * 
+    	 * @return An empty JSON array.
          */
         Json array();
         
@@ -343,6 +351,10 @@ public class Json
          * JSON type. The method is responsible for examining the type of its
          * argument and performing an appropriate mapping to a <code>Json</code>
          * instance. 
+         * 
+         * @param anything An arbitray Java object from which to construct a <code>Json</code>
+         * element.
+         * @return The newly constructed <code>Json</code> instance.
          */        
         Json make(Object anything);
     }
@@ -558,13 +570,6 @@ public class Json
 		expanded.put(json,  json);
 		return json;
 	}
-
-	
-	// For the implementation of schema at least, we'd benefit a lot from the
-	// new Java 8 function API, so we should rewrite it when that comes
-	// along. For now, we just introduce here the same interfaces
-	// so then porting to Java 8 becomes trivial.
-	static interface Function<T,R>	{ R apply(T t); }
     
     static class DefaultSchema implements Schema
     {
@@ -1421,7 +1426,7 @@ public class Json
      * this index, <code>false</code> is returned. 
      * </p>
      * 
-     * @param property The property name.
+     * @param index The 0-based index of the element in a JSON array.
      * @param value The value to compare with. Comparison is done via the equals method. 
      * If the value is not an instance of <code>Json</code>, it is first converted to
      * such an instance. 
@@ -1507,7 +1512,7 @@ public class Json
 	 * <p>
 	 * Remove the specified Java object (converted to a Json instance) 
 	 * from a <code>Json</code> array. This is equivalent to 
-	 * <code>remove({@link #make(anything)})</code>.
+	 * <code>remove({@link #make(Object)})</code>.
 	 * </p>
 	 * 
 	 * @param anything The object to delete.
@@ -1559,7 +1564,7 @@ public class Json
 	 * Json object or array.
 	 * @return this
 	 */
-	public Json with(Json object, Json...options) { throw new UnsupportedOperationException(); }
+	public Json with(Json object, Json[]options) { throw new UnsupportedOperationException(); }
 
     /**
      * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
