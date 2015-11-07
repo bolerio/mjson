@@ -250,8 +250,10 @@ import java.util.regex.Pattern;
  * @author Borislav Iordanov
  * @version 1.4
  */
-public class Json
+public class Json implements java.io.Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * <p>
 	 * This interface defines how <code>Json</code> instances are constructed. There is a 
@@ -1789,6 +1791,8 @@ public class Json
 
 	static class NullJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		NullJson() {}
 		NullJson(Json e) {super(e);}
 		
@@ -1809,6 +1813,8 @@ public class Json
 
 	static class BooleanJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		boolean val;
 		BooleanJson() {}
 		BooleanJson(Json e) {super(e);}
@@ -1831,6 +1837,8 @@ public class Json
 
 	static class StringJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		String val;
 
 		StringJson() {}
@@ -1872,6 +1880,8 @@ public class Json
 
 	static class NumberJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		Number val;
 
 		NumberJson() {}
@@ -1902,6 +1912,8 @@ public class Json
 	
 	static class ArrayJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		List<Json> L = new ArrayList<Json>();
 		
 		ArrayJson() { }
@@ -1974,7 +1986,8 @@ public class Json
                 throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
         }
 
-        int compareJson(Json left, Json right, Json fields)
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+		int compareJson(Json left, Json right, Json fields)
         {
             if (fields.isNull())
                 return ((Comparable)left.getValue()).compareTo(right.getValue());
@@ -2114,6 +2127,8 @@ public class Json
 	
 	static class ObjectJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		Map<String, Json> object = new HashMap<String, Json>();
 		
 		ObjectJson() { }
