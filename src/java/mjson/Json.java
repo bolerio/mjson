@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -571,13 +572,6 @@ public class Json implements java.io.Serializable
 		expanded.put(json,  json);
 		return json;
 	}
-
-	
-	// For the implementation of schema at least, we'd benefit a lot from the
-	// new Java 8 function API, so we should rewrite it when that comes
-	// along. For now, we just introduce here the same interfaces
-	// so then porting to Java 8 becomes trivial.
-	static interface Function<T,R>	{ R apply(T t); }
     
     static class DefaultSchema implements Schema
     {
@@ -1572,7 +1566,7 @@ public class Json implements java.io.Serializable
 	 * Json object or array.
 	 * @return this
 	 */
-	public Json with(Json object, Json...options) { throw new UnsupportedOperationException(); }
+	public Json with(Json object, Json[]options) { throw new UnsupportedOperationException(); }
 
     /**
      * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
