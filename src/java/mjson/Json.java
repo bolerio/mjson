@@ -2003,6 +2003,7 @@ public class Json
                     {
                         L.add(dup ? thatElement.dup() : thatElement);
                         thisIndex++;
+                        thatIndex++;
                         continue;
                     }
                     int compared = compareJson(at(thisIndex), thatElement, compareBy);
@@ -2011,6 +2012,8 @@ public class Json
                     else if (compared > 0) // this > that
                     {
                         L.add(thisIndex, dup ? thatElement.dup() : thatElement);
+                        thatIndex++;
+                    } else { // equal, ignore 
                         thatIndex++;
                     }
                 }
