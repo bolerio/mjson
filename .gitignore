@@ -1,4 +1,9 @@
+# Maven / Eclipse 
 /target/
 .classpath
 .project
 .settings
+
+# Idea
+.idea
+*.iml
