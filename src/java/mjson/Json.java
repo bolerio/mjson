@@ -118,7 +118,7 @@ import java.util.regex.Pattern;
  * To customize how Json elements are represented and to provide your own version of the
  * {@link #make(Object)} method, you create an implementation of the {@link Factory} interface
  * and configure it either globally with the {@link #setGlobalFactory(Factory)} method or
- * on a per-thread basis with the {@link #attachFactory(Factory)}/{@link #dettachFactory()} 
+ * on a per-thread basis with the {@link #attachFactory(Factory)}/{@link #detachFactory()} 
  * methods.
  * </p>
  * 
@@ -1197,7 +1197,7 @@ public class Json implements java.io.Serializable
      * a call to this method.
      * </p>
      */
-    public static void dettachFactory() { threadFactory.remove(); }
+    public static void detachFactory() { threadFactory.remove(); }
     
 	/**
 	 * <p>
