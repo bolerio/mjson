@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -559,13 +560,6 @@ public class Json
 		return json;
 	}
 
-	
-	// For the implementation of schema at least, we'd benefit a lot from the
-	// new Java 8 function API, so we should rewrite it when that comes
-	// along. For now, we just introduce here the same interfaces
-	// so then porting to Java 8 becomes trivial.
-	static interface Function<T,R>	{ R apply(T t); }
-    
     static class DefaultSchema implements Schema
     {
     	static interface Instruction extends Function<Json, Json>{}
