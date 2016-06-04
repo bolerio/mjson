@@ -12,10 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-
-import org.testng.annotations.Factory;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import mjson.Json;
 
@@ -175,7 +173,7 @@ public class TestSchemas
 				   Json.make("hi"), Json.object("a", "hi"));
 	}
 	
-	@Factory
+//	@Factory
 	public Object[] addTests()
 	{
 		List<SuiteTestJson> tests = new ArrayList<SuiteTestJson>(); 

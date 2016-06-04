@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+//import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -361,6 +361,17 @@ public class Json implements java.io.Serializable
         Json make(Object anything);
     }
 
+    static interface Function<T, R> {
+
+        /**
+         * Applies this function to the given argument.
+         *
+         * @param t the function argument
+         * @return the function result
+         */
+        R apply(T t);
+    }
+    
     /**
      * <p>
      * Represents JSON schema - a specific data format that a JSON entity must
@@ -1035,10 +1046,10 @@ public class Json implements java.io.Serializable
     		{
         		this.uri = uri == null ? new URI("") : uri;
     			if (relativeReferenceResolver == null)
-					relativeReferenceResolver = docuri -> {
+					relativeReferenceResolver = new Function<URI, Json>() { public Json apply(URI docuri) {
 						try { return Json.read(fetchContent(docuri.toURL())); } 
 						catch(Exception ex) { throw new RuntimeException(ex); }
-					};
+					}};
     			this.theschema = expandReferences(theschema, 
     											  theschema, 
     											  this.uri, 
@@ -2210,6 +2221,8 @@ public class Json implements java.io.Serializable
 		{
 			if (property == null)
 				throw new IllegalArgumentException("Null property names are not allowed, value is " + el);
+			if (el == null)
+				el = nil();
 			el.enclosing = this;
 			object.put(property, el);
 			return this;

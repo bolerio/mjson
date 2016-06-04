@@ -1,9 +1,10 @@
 package testmjson;
 
-import junit.framework.Assert;
-import org.testng.annotations.Test;
 import mjson.Json;
 import static mjson.Json.*;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Created by biordanov on 10/31/2014.
