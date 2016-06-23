@@ -1293,6 +1293,35 @@ public class Json implements java.io.Serializable
 	
 	/**
 	 * <p>
+	 * Exposes some internal methods that are useful for {@link org.sharegov.mjson.Json.Factory} implementations
+	 * or other extension/layers of the library.
+	 * </p>
+	 * 
+	 * @author Borislav Iordanov
+	 *
+	 */
+	public static class help
+	{
+		/**
+		 * <p>
+		 * Perform JSON escaping so that ", <, >, etc. characters are properly encoded in the 
+		 * JSON string representation before returning to the client code. This is useful when
+		 * serializing property names or string values.
+		 * </p>
+		 */
+		public static String escape(String string) { return escaper.escapeJsonString(string); }
+		
+		/**
+		 * <p>
+		 * Given a JSON Pointer, as per RFC 6901, return the nested JSON value within
+		 * the <code>element</code> parameter.
+		 * </p>
+		 */
+		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
+	}
+	
+	/**
+	 * <p>
 	 * Convert an arbitrary Java instance to a {@link Json} instance.   
 	 * </p>
 	 * 
@@ -2757,6 +2786,21 @@ public class Json implements java.io.Serializable
 
     public static void main(String []argv)
     {
-        System.out.println("JSON main");
+    	try
+    	{
+		    	URI assetUri = new URI("https://raw.githubusercontent.com/pudo/aleph/master/aleph/schema/entity/asset.json");
+		    	URI schemaRoot = new URI("https://raw.githubusercontent.com/pudo/aleph/master/aleph/schema/");
+		
+		    	// This fails
+		    	Json.schema(assetUri);
+		
+		    	// And so does this
+		    	Json asset = Json.read(assetUri.toURL());
+		    	Json.schema(asset, schemaRoot);
+    	}
+    	catch (Throwable t)
+    	{
+    		t.printStackTrace();
+    	}
     }
 }
