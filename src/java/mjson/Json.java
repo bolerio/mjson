@@ -118,7 +118,7 @@ import java.util.regex.Pattern;
  * To customize how Json elements are represented and to provide your own version of the
  * {@link #make(Object)} method, you create an implementation of the {@link Factory} interface
  * and configure it either globally with the {@link #setGlobalFactory(Factory)} method or
- * on a per-thread basis with the {@link #attachFactory(Factory)}/{@link #dettachFactory()} 
+ * on a per-thread basis with the {@link #attachFactory(Factory)}/{@link #detachFactory()} 
  * methods.
  * </p>
  * 
@@ -251,8 +251,10 @@ import java.util.regex.Pattern;
  * @author Borislav Iordanov
  * @version 1.4
  */
-public class Json
+public class Json implements java.io.Serializable
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * <p>
 	 * This interface defines how <code>Json</code> instances are constructed. There is a 
@@ -1158,6 +1160,8 @@ public class Json
      * will dispatch on upon determining the type of its argument. If you already know the type
      * of element to construct, you can avoid the type introspection implicit to the make method
      * and call the factory directly. This will result in an optimization. </p>
+     * 
+     * @return the factory
      */
     public static Factory factory() 
     {
@@ -1171,7 +1175,7 @@ public class Json
      * specific thread-local factory attached to them. 
      * </p>
      * 
-     * @param factory
+     * @param factory The new global factory
      */
     public static void setGlobalFactory(Factory factory) { globalFactory = factory; }
     
@@ -1182,7 +1186,7 @@ public class Json
      * in the same application (well, more accurately, the same ClassLoader). 
      * </p>
      * 
-     * @param factory
+     * @param factory the new thread local factory
      */
     public static void attachFactory(Factory factory) { threadFactory.set(factory); }
     
@@ -1193,7 +1197,7 @@ public class Json
      * a call to this method.
      * </p>
      */
-    public static void dettachFactory() { threadFactory.remove(); }
+    public static void detachFactory() { threadFactory.remove(); }
     
 	/**
 	 * <p>
@@ -1222,15 +1226,17 @@ public class Json
 	 * <p>
 	 * Parse a JSON entity from a {@link CharacterIterator}. 
 	 * </p>
+	 * @param it A character iterator.
+	 * @return the parsed JSON element
 	 * @see #read(String)
 	 */
 	public static Json read(CharacterIterator it) { return (Json)new Reader().read(it); }
 	/**
-	 * <p>Return the <code>null Json</code> instance.</p> 
+	 * @return the <code>null Json</code> instance. 
 	 */
 	public static Json nil() { return factory().nil(); }	
 	/**
-	 * <p>Return a newly constructed, empty JSON object.</p>
+	 * @return a newly constructed, empty JSON object.
 	 */
 	public static Json object()	{ return factory().object();	}
 	/**
@@ -1243,6 +1249,7 @@ public class Json
 	 * to a <code>Json</code> instance using the {@link #make(Object)} method.
 	 * </p>
 	 * @param args A sequence of name value pairs.   
+	 * @return the new JSON object.
 	 */
 	public static Json object(Object...args)
 	{
@@ -1255,7 +1262,7 @@ public class Json
 	}
 	
 	/**
-	 * <p>Return a new constructed, empty JSON array.</p>
+	 * @return a new constructed, empty JSON array.
 	 */
 	public static Json array() { return factory().array(); }
 	
@@ -1263,6 +1270,7 @@ public class Json
 	 * <p>Return a new JSON array filled up with the list of arguments.</p>
 	 *  
 	 * @param args The initial content of the array. 
+	 * @return the new JSON array
 	 */
 	public static Json array(Object...args) 
 	{
@@ -1284,7 +1292,7 @@ public class Json
 	 * <code>toString</code> implementation will work as well. 
 	 * </p>
 	 * 
-	 * @param anything
+	 * @param anything Any Java object that the current JSON factory in effect is capable of handling.
 	 * @return The <code>Json</code>. This method will never return <code>null</code>. It will
 	 * throw an {@link IllegalArgumentException} if it doesn't know how to convert the argument
 	 * to a <code>Json</code> instance.
@@ -1312,6 +1320,7 @@ public class Json
 	 * the whole of them. </p>
 	 * @param maxCharacters The maximum number of characters for
 	 * the string representation.
+	 * @return The string representation of this object.
 	 */
 	public String toString(int maxCharacters) { return toString(); }
 
@@ -1327,17 +1336,17 @@ public class Json
 	public void attachTo(Json enclosing) { this.enclosing = enclosing; }
 	
 	/**
-	 * <p>Return the <code>Json</code> entity, if any, enclosing this 
+	 * @return the <code>Json</code> entity, if any, enclosing this 
 	 * <code>Json</code>. The returned value can be <code>null</code> or
-	 * a <code>Json</code> object or list, but not one of the primitive types.</p>
+	 * a <code>Json</code> object or list, but not one of the primitive types.
 	 */
 	public final Json up() { return enclosing; }
 	
 	/**
-	 * <p>Return a clone (a duplicate) of this <code>Json</code> entity. Note that cloning
+	 * @return a clone (a duplicate) of this <code>Json</code> entity. Note that cloning
 	 * is deep if array and objects. Primitives are also cloned, even though their values are immutable
 	 * because the new enclosing entity (the result of the {@link #up()} method) may be different.
-	 * since they are immutable.</p>
+	 * since they are immutable.
 	 */
 	public Json dup() { return this; }
 	
@@ -1347,6 +1356,7 @@ public class Json
 	 * </p>
 	 * 
 	 * @param index The index of the desired element.
+	 * @return The JSON element at the specified index in this array.
 	 */
 	public Json at(int index) { throw new UnsupportedOperationException(); }
 	
@@ -1355,6 +1365,8 @@ public class Json
 	 * Return the specified property of a <code>Json</code> object or <code>null</code>
 	 * if there's no such property. This method applies only to Json objects.  
 	 * </p>
+	 * @param The property name.
+	 * @return The JSON element that is the value of that property.
 	 */
 	public Json at(String property)	{ throw new UnsupportedOperationException(); }
 	
@@ -1579,153 +1591,144 @@ public class Json
     }
 
 	/**
-	 * <p>Return the underlying value of this <code>Json</code> entity. The actual value will 
+	 * @return the underlying value of this <code>Json</code> entity. The actual value will 
 	 * be a Java Boolean, String, Number, Map, List or null. For complex entities (objects
 	 * or arrays), the method will perform a deep copy and extra underlying values recursively 
-	 * for all nested elements.</p>
+	 * for all nested elements.
 	 */
 	public Object getValue() { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return the boolean value of a boolean <code>Json</code> instance. Call
+	 * @return the boolean value of a boolean <code>Json</code> instance. Call
 	 * {@link #isBoolean()} first if you're not sure this instance is indeed a
-	 * boolean.</p>
+	 * boolean.
 	 */
 	public boolean asBoolean() { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return the string value of a string <code>Json</code> instance. Call
+	 * @return the string value of a string <code>Json</code> instance. Call
 	 * {@link #isString()} first if you're not sure this instance is indeed a
-	 * string.</p>
+	 * string.
 	 */
 	public String asString() { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return the integer value of a number <code>Json</code> instance. Call
+	 * @return the integer value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */
 	public int asInteger() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the float value of a float <code>Json</code> instance. Call
+	 * @return the float value of a float <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */
 	public float asFloat() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the double value of a number <code>Json</code> instance. Call
+	 * @return the double value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */
 	public double asDouble() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the long value of a number <code>Json</code> instance. Call
+	 * @return the long value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */
 	public long asLong() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the short value of a number <code>Json</code> instance. Call
+	 * @return the short value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */
 	public short asShort() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the byte value of a number <code>Json</code> instance. Call
+	 * @return the byte value of a number <code>Json</code> instance. Call
 	 * {@link #isNumber()} first if you're not sure this instance is indeed a
-	 * number.</p>
+	 * number.
 	 */	
 	public byte asByte() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return the first character of a string <code>Json</code> instance. Call
+	 * @return the first character of a string <code>Json</code> instance. Call
 	 * {@link #isString()} first if you're not sure this instance is indeed a
-	 * string.</p>
+	 * string.
 	 */	
 	public char asChar() { throw new UnsupportedOperationException(); }		
 
 	/**
-	 * <p>Return a map of the properties of an object <code>Json</code> instance. The map
+	 * @return a map of the properties of an object <code>Json</code> instance. The map
 	 * is a clone of the object and can be modified safely without affecting it. Call
 	 * {@link #isObject()} first if you're not sure this instance is indeed a
-	 * <code>Json</code> object.</p>
+	 * <code>Json</code> object.
 	 */	
 	public Map<String, Object> asMap() { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return the underlying map of properties of a <code>Json</code> object. The returned
+	 * @return the underlying map of properties of a <code>Json</code> object. The returned
 	 * map is the actual object representation so any modifications to it are modifications
 	 * of the <code>Json</code> object itself. Call
 	 * {@link #isObject()} first if you're not sure this instance is indeed a
 	 * <code>Json</code> object.
-	 * </p>
 	 */
 	public Map<String, Json> asJsonMap() { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return a list of the elements of a <code>Json</code> array. The list is a clone
+	 * @return a list of the elements of a <code>Json</code> array. The list is a clone
 	 * of the array and can be modified safely without affecting it. Call
 	 * {@link #isArray()} first if you're not sure this instance is indeed a
 	 * <code>Json</code> array.
-	 * </p>  
 	 */
 	public List<Object> asList()  { throw new UnsupportedOperationException(); }
 	
 	/**
-	 * <p>Return the underlying {@link List} representation of a <code>Json</code> array.
+	 * @return the underlying {@link List} representation of a <code>Json</code> array.
 	 * The returned list is the actual array representation so any modifications to it 
 	 * are modifications of the <code>Json</code> array itself. Call
 	 * {@link #isArray()} first if you're not sure this instance is indeed a
 	 * <code>Json</code> array.
-	 * </p>
 	 */
 	public List<Json> asJsonList() { throw new UnsupportedOperationException(); }
 
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> null entity 
+	 * @return <code>true</code> if this is a <code>Json</code> null entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isNull() { return false; }
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> string entity 
+	 * @return <code>true</code> if this is a <code>Json</code> string entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isString() { return false; }	
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> number entity 
+	 * @return <code>true</code> if this is a <code>Json</code> number entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isNumber() { return false; }	
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> boolean entity 
+	 * @return <code>true</code> if this is a <code>Json</code> boolean entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isBoolean() { return false;	}	
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> array (i.e. list) entity 
+	 * @return <code>true</code> if this is a <code>Json</code> array (i.e. list) entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isArray() { return false; }	
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> object entity 
+	 * @return <code>true</code> if this is a <code>Json</code> object entity 
 	 * and <code>false</code> otherwise.
-	 * </p> 
 	 */
 	public boolean isObject(){ return false; }	
 	/**
-	 * <p>Return <code>true</code> if this is a <code>Json</code> primitive entity 
+	 * @return <code>true</code> if this is a <code>Json</code> primitive entity 
 	 * (one of string, number or boolean) and <code>false</code> otherwise.
-	 * </p> 
+	 * 
 	 */
 	public boolean isPrimitive() { return isString() || isNumber() || isBoolean(); }
 	
@@ -1755,6 +1758,8 @@ public class Json
      * of a merge. The properties of the object represent paths
      * of the JSON structure being merged and the values represent
      * the set of options that apply to each path.
+     * @param options the configuration options
+     * @return the configuration object
      */
     protected Json collectWithOptions(Json...options)
     {
@@ -1783,6 +1788,8 @@ public class Json
 
 	static class NullJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		NullJson() {}
 		NullJson(Json e) {super(e);}
 		
@@ -1803,6 +1810,8 @@ public class Json
 
 	static class BooleanJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		boolean val;
 		BooleanJson() {}
 		BooleanJson(Json e) {super(e);}
@@ -1825,6 +1834,8 @@ public class Json
 
 	static class StringJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		String val;
 
 		StringJson() {}
@@ -1866,6 +1877,8 @@ public class Json
 
 	static class NumberJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		Number val;
 
 		NumberJson() {}
@@ -1896,6 +1909,8 @@ public class Json
 	
 	static class ArrayJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		List<Json> L = new ArrayList<Json>();
 		
 		ArrayJson() { }
@@ -1968,7 +1983,8 @@ public class Json
                 throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
         }
 
-        int compareJson(Json left, Json right, Json fields)
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+		int compareJson(Json left, Json right, Json fields)
         {
             if (fields.isNull())
                 return ((Comparable)left.getValue()).compareTo(right.getValue());
@@ -2009,6 +2025,7 @@ public class Json
                     {
                         L.add(dup ? thatElement.dup() : thatElement);
                         thisIndex++;
+                        thatIndex++;
                         continue;
                     }
                     int compared = compareJson(at(thisIndex), thatElement, compareBy);
@@ -2017,6 +2034,8 @@ public class Json
                     else if (compared > 0) // this > that
                     {
                         L.add(thisIndex, dup ? thatElement.dup() : thatElement);
+                        thatIndex++;
+                    } else { // equal, ignore 
                         thatIndex++;
                     }
                 }
@@ -2108,6 +2127,8 @@ public class Json
 	
 	static class ObjectJson extends Json
 	{
+		private static final long serialVersionUID = 1L;
+		
 		Map<String, Json> object = new HashMap<String, Json>();
 		
 		ObjectJson() { }
