@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+//import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -361,6 +361,17 @@ public class Json implements java.io.Serializable
         Json make(Object anything);
     }
 
+    static interface Function<T, R> {
+
+        /**
+         * Applies this function to the given argument.
+         *
+         * @param t the function argument
+         * @return the function result
+         */
+        R apply(T t);
+    }
+    
     /**
      * <p>
      * Represents JSON schema - a specific data format that a JSON entity must
@@ -1035,10 +1046,10 @@ public class Json implements java.io.Serializable
     		{
         		this.uri = uri == null ? new URI("") : uri;
     			if (relativeReferenceResolver == null)
-					relativeReferenceResolver = docuri -> {
+					relativeReferenceResolver = new Function<URI, Json>() { public Json apply(URI docuri) {
 						try { return Json.read(fetchContent(docuri.toURL())); } 
 						catch(Exception ex) { throw new RuntimeException(ex); }
-					};
+					}};
     			this.theschema = expandReferences(theschema, 
     											  theschema, 
     											  this.uri, 
@@ -1278,6 +1289,35 @@ public class Json implements java.io.Serializable
 		for (Object x : args)
 			A.add(factory().make(x));
 		return A;
+	}
+	
+	/**
+	 * <p>
+	 * Exposes some internal methods that are useful for {@link org.sharegov.mjson.Json.Factory} implementations
+	 * or other extension/layers of the library.
+	 * </p>
+	 * 
+	 * @author Borislav Iordanov
+	 *
+	 */
+	public static class help
+	{
+		/**
+		 * <p>
+		 * Perform JSON escaping so that ", <, >, etc. characters are properly encoded in the 
+		 * JSON string representation before returning to the client code. This is useful when
+		 * serializing property names or string values.
+		 * </p>
+		 */
+		public static String escape(String string) { return escaper.escapeJsonString(string); }
+		
+		/**
+		 * <p>
+		 * Given a JSON Pointer, as per RFC 6901, return the nested JSON value within
+		 * the <code>element</code> parameter.
+		 * </p>
+		 */
+		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
 	
 	/**
@@ -2210,6 +2250,8 @@ public class Json implements java.io.Serializable
 		{
 			if (property == null)
 				throw new IllegalArgumentException("Null property names are not allowed, value is " + el);
+			if (el == null)
+				el = nil();
 			el.enclosing = this;
 			object.put(property, el);
 			return this;
@@ -2744,6 +2786,21 @@ public class Json implements java.io.Serializable
 
     public static void main(String []argv)
     {
-        System.out.println("JSON main");
+    	try
+    	{
+		    	URI assetUri = new URI("https://raw.githubusercontent.com/pudo/aleph/master/aleph/schema/entity/asset.json");
+		    	URI schemaRoot = new URI("https://raw.githubusercontent.com/pudo/aleph/master/aleph/schema/");
+		
+		    	// This fails
+		    	Json.schema(assetUri);
+		
+		    	// And so does this
+		    	Json asset = Json.read(assetUri.toURL());
+		    	Json.schema(asset, schemaRoot);
+    	}
+    	catch (Throwable t)
+    	{
+    		t.printStackTrace();
+    	}
     }
 }
