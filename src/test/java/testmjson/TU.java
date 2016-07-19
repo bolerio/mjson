@@ -1,5 +1,6 @@
 package testmjson;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,5 +16,9 @@ public class TU
         S.addAll(C);
         return S;
     }
+    
+	public static URL resource(String location)
+	{
+		return TU.class.getResource(location);
+	}   
 }
-
