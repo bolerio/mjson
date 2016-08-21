@@ -677,6 +677,8 @@ public class Json implements java.io.Serializable
     					errors = maybeError(errors, S.apply(param.at(i)));
     				if (uniqueitems != null && uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
     					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
+    				if (errors != null && !errors.asJsonList().isEmpty())
+    					break;
     			}
     			if (size < min || size > max)
 					errors = maybeError(errors,Json.make("Array  " + param.toString(maxchars) + 
@@ -701,10 +703,9 @@ public class Json implements java.io.Serializable
     	class CheckObject implements Instruction
     	{
     		int min = 0, max = Integer.MAX_VALUE;
-    		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
-    		ArrayList<Instruction> props = new ArrayList<Instruction>();
-    		ArrayList<Instruction> patternProps = new ArrayList<Instruction>();
+    		ArrayList<CheckProperty> props = new ArrayList<CheckProperty>();
+    		ArrayList<CheckPatternProperty> patternProps = new ArrayList<CheckPatternProperty>();
     		
         	// Object validation
         	class CheckProperty implements Instruction 
@@ -719,27 +720,23 @@ public class Json implements java.io.Serializable
         			if (value == null)
         				return null;
         			else
-        			{
-        				checked.add(name);
         				return schema.apply(param.at(name));
-        			}
         		} 
         	}
         	
-        	class CheckPatternProperty implements Instruction 
+        	class CheckPatternProperty // implements Instruction 
         	{ 
         		Pattern pattern;
         		Instruction schema; 
         		public CheckPatternProperty(String pattern, Instruction schema) 
-        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }
-        		public Json apply(Json param)
+        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }        		
+        		public Json apply(Json param, Set<String> found)
         		{    	
         			Json errors = null;
         			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
-        				if (pattern.matcher(e.getKey()).find())
-        				{
+        				if (pattern.matcher(e.getKey()).matches()) {
+        					found.add(e.getKey());
         					errors = maybeError(errors, schema.apply(e.getValue()));
-        					checked.add(e.getKey());
         				}
         			return errors;
         		} 
@@ -749,11 +746,15 @@ public class Json implements java.io.Serializable
     		{
     			Json errors = null;
     			if (!param.isObject()) return errors;
-    			checked.clear();
-    			for (Instruction I : props)
+        		HashSet<String> checked = new HashSet<String>();
+    			for (CheckProperty I : props) {
+    				if (param.has(I.name)) checked.add(I.name);
     				errors = maybeError(errors, I.apply(param));
-    			for (Instruction I : patternProps)
-    				errors = maybeError(errors, I.apply(param));    			    			
+    			}
+    			for (CheckPatternProperty I : patternProps) {
+    				
+    				errors = maybeError(errors, I.apply(param, checked));
+    			}
     			if (additionalSchema != any) for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
     				if (!checked.contains(e.getKey()))
         				errors = maybeError(errors, additionalSchema == null ? 
@@ -843,13 +844,23 @@ public class Json implements java.io.Serializable
     		public Json apply(Json param)
     		{    			
     			int matches = 0;
-    			for (Instruction I : alternates)    				
-    				if (I.apply(param) == null)
+    			Json errors = Json.array();
+    			for (Instruction I : alternates)
+    			{
+    				Json result = I.apply(param);
+    				if (result == null)
     					matches++;
+    				else
+    					errors.add(result);
+    			}
     			if (matches != 1)
+    			{
+        			for (Instruction I : alternates)
+        				I.apply(param);
 	    			return Json.array().add("Element " + param.toString(maxchars) + 
 	    					" must conform to exactly one of available sub-schemas, but not more " + 
-	    					schema.toString(maxchars));    			
+	    					schema.toString(maxchars)).add(errors);
+    			}
     			else
     				return null;
     		}    		
@@ -1426,7 +1437,7 @@ public class Json implements java.io.Serializable
 		Json x = at(property);
 		if (x == null)
 		{
-			set(property, def);
+//			set(property, def);
 			return def;
 		}
 		else
@@ -1809,15 +1820,23 @@ public class Json implements java.io.Serializable
         for (Json opt : options)
         {
             if (opt.isString())
-                result.at("", object()).set(opt.asString(), true);
+            {
+            	if (!result.has(""))
+            		result.set("", object());
+                result.at("").set(opt.asString(), true);
+            }
             else
             {
-                Json forPaths = opt.at("for", array(""));
+            	if (!opt.has("for"))
+            		opt.set("for", array(""));
+                Json forPaths = opt.at("for");
                 if (!forPaths.isArray())
                     forPaths = array(forPaths);
                 for (Json path : forPaths.asJsonList())
                 {
-                    Json at_path = result.at(path.asString(), object());
+                	if (!result.has(path.asString()))
+                		result.set(path.asString(), object());
+                    Json at_path = result.at(path.asString());
                     at_path.set("merge", opt.is("merge", true));
                     at_path.set("dup", opt.is("dup", true));
                     at_path.set("sort", opt.is("sort", true));
@@ -2271,6 +2290,8 @@ public class Json implements java.io.Serializable
 
         protected Json withOptions(Json other, Json allOptions, String path)
         {
+        	if (!allOptions.has(path))
+        		allOptions.set(path, object());
             Json options = allOptions.at(path, object());
             boolean duplicate = options.is("dup", true);
             if (options.is("merge", true))

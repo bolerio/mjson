@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -171,6 +172,19 @@ public class TestSchemas
 				   Json.object().set("a",  10), Json.array(10));
 		doTest(Json.object("enum", Json.array(null, 42, "hi", Json.object("a", 10))),
 				   Json.make("hi"), Json.object("a", "hi"));
+	}
+	
+	@Test
+	public void testOpenCirmSchema() throws URISyntaxException
+	{
+		Json.Schema schema = Json.schema(TU.resource("/opencirm/json_case_schema.json").toURI());
+		Json data = Json.read(TU.resource("/opencirm/json_data.json"));
+		Json result = schema.validate(data);
+		if (!result.is("ok", true)) 
+		{
+			System.err.println(result.at("errors"));
+			Assert.fail();
+		}
 	}
 	
 //	@Factory

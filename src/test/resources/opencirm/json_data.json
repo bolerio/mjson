@@ -1,0 +1,763 @@
+[
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_PWNOTE1",
+    "hasLegacyCode": "PWNOTE1",
+    "hasAllowableModules": ",WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "If Location/Property, previously entered address will be used.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "0.02",
+    "isDisabled": "true",
+    "type": "ServiceNote"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_PWNOTE2",
+    "hasLegacyCode": "PWNOTE2",
+    "hasAllowableModules": ",WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "If Intersection, enter streets in Street 1 and Street 2.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "0.04",
+    "type": "ServiceNote"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_PWNOTE3",
+    "hasLegacyCode": "PWNOTE3",
+    "hasAllowableModules": ",WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "Corridor is a street between 2 cross streets. Enter in Streets 1,2,3.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "0.06",
+    "type": "ServiceNote"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_PWNOTE4",
+    "hasLegacyCode": "PWNOTE4",
+    "hasAllowableModules": ",WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "An Area is surrounded by 4 streets (a block). Use all 4 Street fields.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "0.08",
+    "type": "ServiceNote"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1",
+    "hasLegacyCode": "GIS1",
+    "hasChoiceValueList": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP",
+      "hasChoiceValue": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCARE",
+          "hasLegacyCode": "QALOCARE",
+          "label": "Area",
+          "hasOrderBy": "5.0",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_ARE_EVENT",
+            "label": "PW702_GIS1_ARE_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+                "hasLegacyCode": "GIS4",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 3",
+                "hasOrderBy": "0.4",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS5",
+                "hasLegacyCode": "GIS5",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 4",
+                "hasOrderBy": "0.5",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCCOR",
+          "hasLegacyCode": "QALOCCOR",
+          "label": "Corridor",
+          "hasOrderBy": "4.0",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_COR_EVENT",
+            "label": "PW702_GIS1_COR_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+                "hasLegacyCode": "GIS4",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 3",
+                "hasOrderBy": "0.4",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCINT",
+          "hasLegacyCode": "QALOCINT",
+          "label": "Intersection",
+          "hasOrderBy": "2.0",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_INT_EVENT",
+            "label": "PW702_GIS1_INT_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCLOC",
+          "hasLegacyCode": "QALOCLOC",
+          "label": "Location/Property",
+          "hasOrderBy": "1.0",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_LOC_EVENT",
+            "label": "PW702_GIS1_LOC_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+                "hasLegacyCode": "GIS4",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 3",
+                "hasOrderBy": "0.4",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS5",
+                "hasLegacyCode": "GIS5",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 4",
+                "hasOrderBy": "0.5",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldDisabled"
+          },
+          "type": "ChoiceValue"
+        }
+      ],
+      "label": "PW702_GIS1_QALOCTYP",
+      "type": "ChoiceValueList"
+    },
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasServiceFieldAlert": [
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#152873259",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#152873284",
+          "label": "For Area (surrounded by 4 streets such as a block), you must complete all 4 Street \nfields: Street1, Street2, Street3, Street4; (i.e. SW 137th Ave = Street1, SW 138th Ave \n= Street2, SW 38th St = Street3, SW 40th St = Street4",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "152873259",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCARE",
+          "hasLegacyCode": "QALOCARE",
+          "label": "Area",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_ARE_EVENT",
+            "label": "PW702_GIS1_ARE_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+                "hasLegacyCode": "GIS4",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 3",
+                "hasOrderBy": "0.4",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS5",
+                "hasLegacyCode": "GIS5",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 4",
+                "hasOrderBy": "0.5",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        }
+      },
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#152873261",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#152873286",
+          "label": "For Corridor (between 2 cross streets), you must complete Street1, Street2, & Street3 (i.e. SW 137th Ave = Street1, SW 8th St = Street2, and SW 16th St = Street3)",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "152873261",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCCOR",
+          "hasLegacyCode": "QALOCCOR",
+          "label": "Corridor",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_COR_EVENT",
+            "label": "PW702_GIS1_COR_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+                "hasLegacyCode": "GIS4",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 3",
+                "hasOrderBy": "0.4",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        }
+      },
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#152873263",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#152873288",
+          "label": "For Intersection you must complete Street1 and Street2 to reflect the intersection(i.e. SW 137th Ave = Street1 and SW 8th St = Street2)",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "152873263",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_QALOCTYP_QALOCINT",
+          "hasLegacyCode": "QALOCINT",
+          "label": "Intersection",
+          "hasLegacyEvent": {
+            "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_INT_EVENT",
+            "label": "PW702_GIS1_INT_EVENT",
+            "hasServiceField": [
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+                "hasLegacyCode": "GIS2",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 1",
+                "hasOrderBy": "0.2",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              },
+              {
+                "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+                "hasLegacyCode": "GIS3",
+                "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+                "hasDataType": "CHAR",
+                "label": "Street 2",
+                "hasOrderBy": "0.3",
+                "type": "ServiceQuestion",
+                "hasStandardizeStreetFormat": "true"
+              }
+            ],
+            "type": "MarkServiceFieldRequired"
+          },
+          "type": "ChoiceValue"
+        }
+      }
+    ],
+    "hasDataType": "CHARLIST",
+    "label": "Location Type",
+    "hasBusinessCodes": ",REQINTAK,WEBQREQD,FQ_ALERT,SUCCESSR,FQ_ALERT,FQ_ALERT,FQ_ALERT,FQ_ALERT,FQ_ALERT,FQ_ALERT,",
+    "hasOrderBy": "0.1",
+    "hasLegacyEvent": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS1_CLEAR_EVENT",
+      "label": "PW702_GIS1_CLEAR_EVENT",
+      "hasServiceField": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+          "hasLegacyCode": "GIS2",
+          "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+          "hasDataType": "CHAR",
+          "label": "Street 1",
+          "hasOrderBy": "0.2",
+          "type": "ServiceQuestion",
+          "hasStandardizeStreetFormat": "true"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+          "hasLegacyCode": "GIS3",
+          "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+          "hasDataType": "CHAR",
+          "label": "Street 2",
+          "hasOrderBy": "0.3",
+          "type": "ServiceQuestion",
+          "hasStandardizeStreetFormat": "true"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+          "hasLegacyCode": "GIS4",
+          "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+          "hasDataType": "CHAR",
+          "label": "Street 3",
+          "hasOrderBy": "0.4",
+          "type": "ServiceQuestion",
+          "hasStandardizeStreetFormat": "true"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS5",
+          "hasLegacyCode": "GIS5",
+          "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+          "hasDataType": "CHAR",
+          "label": "Street 4",
+          "hasOrderBy": "0.5",
+          "type": "ServiceQuestion",
+          "hasStandardizeStreetFormat": "true"
+        }
+      ],
+      "type": "ClearServiceField"
+    },
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS2",
+    "hasLegacyCode": "GIS2",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "Street 1",
+    "hasOrderBy": "0.2",
+    "type": "ServiceQuestion",
+    "hasStandardizeStreetFormat": "true"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS3",
+    "hasLegacyCode": "GIS3",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "Street 2",
+    "hasOrderBy": "0.3",
+    "type": "ServiceQuestion",
+    "hasStandardizeStreetFormat": "true"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS4",
+    "hasLegacyCode": "GIS4",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "Street 3",
+    "hasOrderBy": "0.4",
+    "type": "ServiceQuestion",
+    "hasStandardizeStreetFormat": "true"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS5",
+    "hasLegacyCode": "GIS5",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "Street 4",
+    "hasOrderBy": "0.5",
+    "type": "ServiceQuestion",
+    "hasStandardizeStreetFormat": "true"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6",
+    "hasLegacyCode": "GIS6",
+    "hasChoiceValueList": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6_PWCORR",
+      "hasChoiceValue": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6_PWCORR_PWCORST1",
+          "hasLegacyCode": "PWCORST1",
+          "label": "1",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6_PWCORR_PWCORST2",
+          "hasLegacyCode": "PWCORST2",
+          "label": "2",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6_PWCORR_PWCORST3",
+          "hasLegacyCode": "PWCORST3",
+          "label": "3",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_GIS6_PWCORR_PWCORST4",
+          "hasLegacyCode": "PWCORST4",
+          "label": "4",
+          "type": "ChoiceValue"
+        }
+      ],
+      "label": "PW702_GIS6_PWCORR",
+      "type": "ChoiceValueList"
+    },
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHARLIST",
+    "label": "Corridor Primary Street",
+    "hasOrderBy": "0.6",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS",
+    "hasLegacyCode": "DOESTHIS",
+    "hasChoiceValueList": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM",
+      "hasChoiceValue": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON01",
+          "hasLegacyCode": "PWDNON01",
+          "label": "Private Road",
+          "hasOrderBy": "1.0",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON02",
+          "hasLegacyCode": "PWDNON02",
+          "label": "Private Community",
+          "hasOrderBy": "2.0",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON03",
+          "hasLegacyCode": "PWDNON03",
+          "label": "New Development",
+          "hasOrderBy": "3.0",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON04",
+          "hasLegacyCode": "PWDNON04",
+          "label": "Community Under Construction",
+          "hasOrderBy": "4.0",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON05",
+          "hasLegacyCode": "PWDNON05",
+          "label": "None of the above",
+          "hasOrderBy": "5.0",
+          "type": "ChoiceValue"
+        }
+      ],
+      "label": "PW702_DOESTHIS_PWDNONCM",
+      "type": "ChoiceValueList"
+    },
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasServiceFieldAlert": [
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#188024061",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#188024063",
+          "label": "Tell the Citizen that this is the responsibility of the Home Owners Association or the Property Manager. \nCLEAR THIS SR.",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "188024061",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON01",
+          "hasLegacyCode": "PWDNON01",
+          "label": "Private Road",
+          "type": "ChoiceValue"
+        }
+      },
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#188024065",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#188024067",
+          "label": "Tell the Citizen that this is the responsibility of the Home Owners Association or the Property Manager. \nCLEAR THIS SR.",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "188024065",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON02",
+          "hasLegacyCode": "PWDNON02",
+          "label": "Private Community",
+          "type": "ChoiceValue"
+        }
+      },
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#188024069",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#188024071",
+          "label": "Tell the Citizen that this is the responsibility of the Construction Company or the Property Manager, \nsince this property may still be under Bond.\nCLEAR THIS SR.",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "188024069",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON03",
+          "hasLegacyCode": "PWDNON03",
+          "label": "New Development",
+          "type": "ChoiceValue"
+        }
+      },
+      {
+        "iri": "http://www.miamidade.gov/cirm/legacy#188024073",
+        "hasLegacyEvent": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#188024075",
+          "label": "CALL-TAKER:  CHANGE THIS SR TYPE TO: \n\nNEW DEVELOPMENT/SUBDIVISION CONSTRUCTION COMPLAINT",
+          "type": "ServiceFieldAlert"
+        },
+        "label": "188024073",
+        "type": "QuestionTrigger",
+        "hasAnswerObject": {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_DOESTHIS_PWDNONCM_PWDNON04",
+          "hasLegacyCode": "PWDNON04",
+          "label": "Community Under Construction",
+          "type": "ChoiceValue"
+        }
+      }
+    ],
+    "hasDataType": "CHAROPT",
+    "label": "Does this road meet any of the following criteria?",
+    "hasBusinessCodes": ",FQ_ALERT,REQINTAK,SUCCESSR,WEBQREQD,FQ_ALERT,FQ_ALERT,FQ_ALERT,FQ_ALERT,",
+    "hasOrderBy": "0.9",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q1",
+    "hasLegacyCode": "Q1",
+    "hasChoiceValueList": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q1_YESNO1",
+      "hasChoiceValue": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q1_YESNO1_NO",
+          "hasLegacyCode": "NO",
+          "label": "No",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q1_YESNO1_YES",
+          "hasLegacyCode": "YES",
+          "label": "Yes",
+          "type": "ChoiceValue"
+        }
+      ],
+      "label": "PW702_Q1_YESNO1",
+      "type": "ChoiceValueList"
+    },
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,WEBINTAK,",
+    "hasServiceFieldAlert": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#152873277",
+      "hasLegacyEvent": {
+        "iri": "http://www.miamidade.gov/cirm/legacy#152873290",
+        "label": "CALL TAKER:  Please Change the SR Type to: PEDESTRIAN RAMP ( NOT ADA RELATED )",
+        "type": "ServiceFieldAlert"
+      },
+      "label": "152873277",
+      "type": "QuestionTrigger",
+      "hasAnswerObject": {
+        "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q1_YESNO1_NO",
+        "hasLegacyCode": "NO",
+        "label": "No",
+        "type": "ChoiceValue"
+      }
+    },
+    "hasDataType": "CHAROPT",
+    "label": "Does a disabled person reside at this location?",
+    "hasBusinessCodes": ",FQ_ALERT,SUCCESSR,",
+    "hasOrderBy": "1.0",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q2",
+    "hasLegacyCode": "Q2",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,",
+    "hasDataType": "CHAR",
+    "label": "What is the desired route?",
+    "hasOrderBy": "2.0",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q3",
+    "hasLegacyCode": "Q3",
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,",
+    "hasDataType": "CHAR",
+    "label": "Where do you want to go?",
+    "hasOrderBy": "3.0",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q4",
+    "hasLegacyCode": "Q4",
+    "hasChoiceValueList": {
+      "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q4_YESNO1",
+      "hasChoiceValue": [
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q4_YESNO1_NO",
+          "hasLegacyCode": "NO",
+          "label": "No",
+          "type": "ChoiceValue"
+        },
+        {
+          "iri": "http://www.miamidade.gov/cirm/legacy#PW702_Q4_YESNO1_YES",
+          "hasLegacyCode": "YES",
+          "label": "Yes",
+          "type": "ChoiceValue"
+        }
+      ],
+      "label": "PW702_Q4_YESNO1",
+      "type": "ChoiceValueList"
+    },
+    "hasAllowableModules": ",SREINTAK,SREMASS,SRERESAC,SRSNGLWO,SRSUMMRY,",
+    "hasDataType": "CHAROPT",
+    "label": "Is there an existing sidewalk?",
+    "hasOrderBy": "4.0",
+    "type": "ServiceQuestion"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_THISSRSH",
+    "hasLegacyCode": "THISSRSH",
+    "hasAllowableModules": ",SREINTAK,SRERESAC,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "This SR should be inspected within 30 business days.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "98.0",
+    "type": "ServiceNote"
+  },
+  {
+    "iri": "http://www.miamidade.gov/cirm/legacy#PW702_YOUMAYCA",
+    "hasLegacyCode": "YOUMAYCA",
+    "hasAllowableModules": ",SREINTAK,SRERESAC,SRSUMMRY,WEBINTAK,",
+    "hasDataType": "CHAR",
+    "label": "You may call for an update in 30 days.",
+    "hasBusinessCodes": ",NOUPDATE,",
+    "hasOrderBy": "99.0",
+    "type": "ServiceNote"
+  }
+]
