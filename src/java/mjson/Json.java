@@ -855,8 +855,6 @@ public class Json implements java.io.Serializable
     			}
     			if (matches != 1)
     			{
-        			for (Instruction I : alternates)
-        				I.apply(param);
 	    			return Json.array().add("Element " + param.toString(maxchars) + 
 	    					" must conform to exactly one of available sub-schemas, but not more " + 
 	    					schema.toString(maxchars)).add(errors);
