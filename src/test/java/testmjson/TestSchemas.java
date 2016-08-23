@@ -173,12 +173,25 @@ public class TestSchemas
 		doTest(Json.object("enum", Json.array(null, 42, "hi", Json.object("a", 10))),
 				   Json.make("hi"), Json.object("a", "hi"));
 	}
+
+	@Test
+	public void testSchemaWithDefs() throws URISyntaxException
+	{
+		Json.Schema schema = Json.schema(TU.resource("/schemas_data/schema_with_defs.json").toURI());
+		Json data = Json.array(Json.object());
+		Json result = schema.validate(data);
+		if (!result.is("ok", true)) 
+		{
+			System.err.println(result.at("errors"));
+			Assert.fail();
+		}
+	}
 	
 	@Test
 	public void testOpenCirmSchema() throws URISyntaxException
 	{
-		Json.Schema schema = Json.schema(TU.resource("/opencirm/json_case_schema.json").toURI());
-		Json data = Json.read(TU.resource("/opencirm/json_data.json"));
+		Json.Schema schema = Json.schema(TU.resource("/schemas_data/json_case_schema.json").toURI());
+		Json data = Json.read(TU.resource("/schemas_data/json_data.json"));
 		Json result = schema.validate(data);
 		if (!result.is("ok", true)) 
 		{

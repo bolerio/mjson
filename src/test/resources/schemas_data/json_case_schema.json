@@ -5,7 +5,7 @@
     "minItems": 1,
     "uniqueItems": true,
     "type": "array",
-  "definitions":{
+    "definitions":{
     "ServiceField": {
               "type": "object",
               "oneOf": [
