@@ -634,6 +634,8 @@ public class Json
     					errors = maybeError(errors, S.apply(param.at(i)));
     				if (uniqueitems != null && uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
     					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
+    				if (errors != null && !errors.asJsonList().isEmpty())
+    					break;    				
     			}
     			if (size < min || size > max)
 					errors = maybeError(errors,Json.make("Array  " + param.toString(maxchars) + 
@@ -658,11 +660,9 @@ public class Json
     	class CheckObject implements Instruction
     	{
     		int min = 0, max = Integer.MAX_VALUE;
-    		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
-    		ArrayList<Instruction> props = new ArrayList<Instruction>();
-    		ArrayList<Instruction> patternProps = new ArrayList<Instruction>();
-    		
+    		ArrayList<CheckProperty> props = new ArrayList<CheckProperty>();
+    		ArrayList<CheckPatternProperty> patternProps = new ArrayList<CheckPatternProperty>();    		
         	// Object validation
         	class CheckProperty implements Instruction 
         	{ 
@@ -676,27 +676,23 @@ public class Json
         			if (value == null)
         				return null;
         			else
-        			{
-        				checked.add(name);
         				return schema.apply(param.at(name));
-        			}
         		} 
         	}
         	
-        	class CheckPatternProperty implements Instruction 
+        	class CheckPatternProperty // implements Instruction 
         	{ 
         		Pattern pattern;
         		Instruction schema; 
         		public CheckPatternProperty(String pattern, Instruction schema) 
-        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }
-        		public Json apply(Json param)
+        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }        		
+        		public Json apply(Json param, Set<String> found)
         		{    	
         			Json errors = null;
         			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
-        				if (pattern.matcher(e.getKey()).find())
-        				{
+        				if (pattern.matcher(e.getKey()).find()) {
+        					found.add(e.getKey());
         					errors = maybeError(errors, schema.apply(e.getValue()));
-        					checked.add(e.getKey());
         				}
         			return errors;
         		} 
@@ -706,11 +702,15 @@ public class Json
     		{
     			Json errors = null;
     			if (!param.isObject()) return errors;
-    			checked.clear();
-    			for (Instruction I : props)
+        		HashSet<String> checked = new HashSet<String>();
+    			for (CheckProperty I : props) {
+    				if (param.has(I.name)) checked.add(I.name);
     				errors = maybeError(errors, I.apply(param));
-    			for (Instruction I : patternProps)
-    				errors = maybeError(errors, I.apply(param));    			    			
+    			}
+    			for (CheckPatternProperty I : patternProps) {
+    				
+    				errors = maybeError(errors, I.apply(param, checked));
+    			}
     			if (additionalSchema != any) for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
     				if (!checked.contains(e.getKey()))
         				errors = maybeError(errors, additionalSchema == null ? 
