@@ -22,7 +22,7 @@ import mjson.Json;
  *
  */
 @RunWith(Parameterized.class)
-public class SuiteTestJson
+public class TestJsonSchemaSuite
 {
 	private String group;
 	private String description;
@@ -59,7 +59,7 @@ public class SuiteTestJson
  		return tests;
     }
 	    
-	public SuiteTestJson(String group, 
+	public TestJsonSchemaSuite(String group, 
 						 String description, 
 						 Json.Schema schema, 
 						 Json data, 

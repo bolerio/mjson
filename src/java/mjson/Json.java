@@ -734,7 +734,7 @@ public class Json implements java.io.Serializable
         		{    	
         			Json errors = null;
         			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
-        				if (pattern.matcher(e.getKey()).matches()) {
+        				if (pattern.matcher(e.getKey()).find()) {
         					found.add(e.getKey());
         					errors = maybeError(errors, schema.apply(e.getValue()));
         				}

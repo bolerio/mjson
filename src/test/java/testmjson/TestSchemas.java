@@ -200,10 +200,9 @@ public class TestSchemas
 		}
 	}
 	
-//	@Factory
 	public Object[] addTests()
 	{
-		List<SuiteTestJson> tests = new ArrayList<SuiteTestJson>(); 
+		List<TestJsonSchemaSuite> tests = new ArrayList<TestJsonSchemaSuite>(); 
 		for (Map.Entry<String, String> test : testResources("suite").entrySet())
 		{
 			Json set = Json.read(test.getValue());
@@ -214,7 +213,7 @@ public class TestSchemas
 				{
 					Json.Schema schema = Json.schema(one.at("schema"));
 					for (Json t : one.at("tests").asJsonList())
-						tests.add(new SuiteTestJson(test.getKey(),
+						tests.add(new TestJsonSchemaSuite(test.getKey(),
 													t.at("description","***").asString() + "/" +
 								  					      one.at("description", "---").asString(),
 								  					schema,
@@ -245,7 +244,7 @@ public class TestSchemas
 			//System.out.println(one.at("schema"));
 			for (Json t : one.at("tests").asJsonList())
 			{
-				SuiteTestJson thetest = new SuiteTestJson("properties",
+				TestJsonSchemaSuite thetest = new TestJsonSchemaSuite("properties",
 											t.at("description","***").asString() + "/" +
 						  					      one.at("description", "---").asString(),
 						  					schema,
