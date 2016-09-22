@@ -46,6 +46,16 @@ public class TestEnclosing
 		Assert.assertTrue(i.up().asJsonList().contains(arr2));
 	}
 
+	@Test
+	public void testToStringOfCircularObject()
+	{
+		Json x = Json.object("name", "x", "tuple", Json.array());
+		Json y = Json.object("backref", x);
+		x.at("tuple").add(y);
+		String asstring = x.toString();
+		Assert.assertTrue(asstring.contains("tuple"));
+	}
+	
 	/**
 	 * When we duplicate a deeply nested JSON structure, the parent chains must
 	 * be properly replicated.

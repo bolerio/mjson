@@ -362,7 +362,7 @@ public class Json implements java.io.Serializable
         Json make(Object anything);
     }
 
-    static interface Function<T, R> {
+    public static interface Function<T, R> {
 
         /**
          * Applies this function to the given argument.
@@ -414,6 +414,11 @@ public class Json implements java.io.Serializable
     	Json validate(Json document);
     	
     	/**
+    	 * <p>Return the JSON representation of the schema.</p>
+    	 */
+    	Json toJson();
+    	
+    	/**
     	 * <p>Possible options are: <code>ignoreDefaults:true|false</code>.
     	 * </p>
     	 * @return A newly created <code>Json</code> conforming to this schema.
@@ -431,7 +436,6 @@ public class Json implements java.io.Serializable
 	    	char [] buf = new char[1024];
 	    	for (int n = reader.read(buf); n > -1; n = reader.read(buf))
 	    	    content.append(buf, 0, n);
-//	    	System.out.println("last reaad: " + new StringBuilder(buf))
 	    	return content.toString();
     	}
     	catch (Exception ex)
@@ -555,31 +559,23 @@ public class Json implements java.io.Serializable
 				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
-					ref = resolveRef(base, topdoc, refuri, resolved, expanded, uriResolver);
-					resolved.put(refuri.toString(), ref);					
-					ref = expandReferences(ref, topdoc, base, resolved, expanded, uriResolver);
+					ref = Json.object();
 					resolved.put(refuri.toString(), ref);
+					ref.with(resolveRef(base, topdoc, refuri, resolved, expanded, uriResolver));
 				}
 				json = ref;
 			}
 			else 
 			{
-				Json O = Json.object();
 				for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
-					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded, uriResolver));
-				json.with(O, new Json[0]);
+					json.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded, uriResolver));
 			}
 		}
 		else if (json.isArray())
 		{
-//			Json A = Json.array();
 			for (int i = 0; i < json.asJsonList().size(); i++)
-			{
-				//A.add(expandReferences(j, topdoc, base, resolved));
-				Json el = expandReferences(json.at(i), topdoc, base, resolved, expanded, uriResolver);
-				json.set(i, el);				
-			}
-//			return A;
+				json.set(i, 
+						 expandReferences(json.at(i), topdoc, base, resolved, expanded, uriResolver));
 		}
 		expanded.put(json,  json);
 		return json;
@@ -951,10 +947,11 @@ public class Json implements java.io.Serializable
     		if (S.has("not"))
     			seq.add(new CheckNot(compile(S.at("not"), compiled), S.at("not")));
     		
-    		if (S.has("required"))
+    		if (S.has("required") && S.at("required").isArray())
+    		{
     			for (Json p : S.at("required").asJsonList())
     				seq.add(new CheckPropertyPresent(p.asString()));
-    		
+    		}
     		CheckObject objectCheck = new CheckObject();
     		if (S.has("properties"))
     			for (Map.Entry<String, Json> p : S.at("properties").asJsonMap().entrySet())
@@ -1060,8 +1057,9 @@ public class Json implements java.io.Serializable
 						try { return Json.read(fetchContent(docuri.toURL())); } 
 						catch(Exception ex) { throw new RuntimeException(ex); }
 					}};
-    			this.theschema = expandReferences(theschema, 
-    											  theschema, 
+				this.theschema = theschema.dup();
+    			this.theschema = expandReferences(this.theschema, 
+    											  this.theschema, 
     											  this.uri, 
     											  new HashMap<String, Json>(), 
     											  new IdentityHashMap<Json, Json>(),
@@ -1076,6 +1074,11 @@ public class Json implements java.io.Serializable
     		Json result = Json.object("ok", true);
     		Json errors = start.apply(document);    		    		
     		return errors == null ? result : result.set("errors", errors).set("ok", false);
+    	}
+    	
+    	public Json toJson() 
+    	{
+    		return theschema;
     	}
     	
     	public Json generate(Json options)
@@ -2207,12 +2210,20 @@ public class Json implements java.io.Serializable
 			return toString(Integer.MAX_VALUE);
 		}
 		
-		public String toString(int maxCharacters) 
+		public String toString(int maxCharacters)
+		{
+			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
+		}
+		
+		String toStringImpl(int maxCharacters, Map<Json, Json> done)
 		{
 			StringBuilder sb = new StringBuilder("[");
 			for (Iterator<Json> i = L.iterator(); i.hasNext(); )
 			{
-				String s = i.next().toString(maxCharacters);
+				Json value = i.next();
+				String s = value.isObject() ? ((ObjectJson)value).toStringImpl(maxCharacters, done)
+							: value.isArray() ? ((ArrayJson)value).toStringImpl(maxCharacters, done)
+							: value.toString(maxCharacters);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				else
@@ -2373,7 +2384,15 @@ public class Json implements java.io.Serializable
 		
 		public String toString(int maxCharacters)
 		{
+			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
+		}
+		
+		String toStringImpl(int maxCharacters, Map<Json, Json> done)
+		{
 			StringBuilder sb = new StringBuilder("{");
+			if (done.containsKey(this))
+				return sb.append("...}").toString();
+			done.put(this, this);
 			for (Iterator<Map.Entry<String, Json>> i = object.entrySet().iterator(); i.hasNext(); )
 			{
 				Map.Entry<String, Json> x  = i.next();
@@ -2381,7 +2400,9 @@ public class Json implements java.io.Serializable
 				sb.append(escaper.escapeJsonString(x.getKey()));
 				sb.append('"');
 				sb.append(":");
-				String s = x.getValue().toString(maxCharacters);
+				String s = x.getValue().isObject() ? ((ObjectJson)x.getValue()).toStringImpl(maxCharacters, done)
+								: x.getValue().isArray() ? ((ArrayJson)x.getValue()).toStringImpl(maxCharacters, done) 
+								: x.getValue().toString(maxCharacters);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				sb.append(s);
