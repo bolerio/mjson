@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -172,11 +173,36 @@ public class TestSchemas
 		doTest(Json.object("enum", Json.array(null, 42, "hi", Json.object("a", 10))),
 				   Json.make("hi"), Json.object("a", "hi"));
 	}
+
+	@Test
+	public void testSchemaWithDefs() throws URISyntaxException
+	{
+		Json.Schema schema = Json.schema(TU.resource("/schemas_data/schema_with_defs.json").toURI());
+		Json data = Json.array(Json.object());
+		Json result = schema.validate(data);
+		if (!result.is("ok", true)) 
+		{
+			System.err.println(result.at("errors"));
+			Assert.fail();
+		}
+	}
 	
-//	@Factory
+	@Test
+	public void testOpenCirmSchema() throws URISyntaxException
+	{
+		Json.Schema schema = Json.schema(TU.resource("/schemas_data/json_case_schema.json").toURI());
+		Json data = Json.read(TU.resource("/schemas_data/json_data.json"));
+		Json result = schema.validate(data);
+		if (!result.is("ok", true)) 
+		{
+			System.err.println(result.at("errors"));
+			Assert.fail();
+		}
+	}
+	
 	public Object[] addTests()
 	{
-		List<SuiteTestJson> tests = new ArrayList<SuiteTestJson>(); 
+		List<TestJsonSchemaSuite> tests = new ArrayList<TestJsonSchemaSuite>(); 
 		for (Map.Entry<String, String> test : testResources("suite").entrySet())
 		{
 			Json set = Json.read(test.getValue());
@@ -187,7 +213,7 @@ public class TestSchemas
 				{
 					Json.Schema schema = Json.schema(one.at("schema"));
 					for (Json t : one.at("tests").asJsonList())
-						tests.add(new SuiteTestJson(test.getKey(),
+						tests.add(new TestJsonSchemaSuite(test.getKey(),
 													t.at("description","***").asString() + "/" +
 								  					      one.at("description", "---").asString(),
 								  					schema,
@@ -218,7 +244,7 @@ public class TestSchemas
 			//System.out.println(one.at("schema"));
 			for (Json t : one.at("tests").asJsonList())
 			{
-				SuiteTestJson thetest = new SuiteTestJson("properties",
+				TestJsonSchemaSuite thetest = new TestJsonSchemaSuite("properties",
 											t.at("description","***").asString() + "/" +
 						  					      one.at("description", "---").asString(),
 						  					schema,

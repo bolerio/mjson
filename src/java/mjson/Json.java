@@ -26,6 +26,7 @@ import java.net.URL;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -361,7 +362,7 @@ public class Json implements java.io.Serializable
         Json make(Object anything);
     }
 
-    static interface Function<T, R> {
+    public static interface Function<T, R> {
 
         /**
          * Applies this function to the given argument.
@@ -413,6 +414,11 @@ public class Json implements java.io.Serializable
     	Json validate(Json document);
     	
     	/**
+    	 * <p>Return the JSON representation of the schema.</p>
+    	 */
+    	Json toJson();
+    	
+    	/**
     	 * <p>Possible options are: <code>ignoreDefaults:true|false</code>.
     	 * </p>
     	 * @return A newly created <code>Json</code> conforming to this schema.
@@ -430,7 +436,6 @@ public class Json implements java.io.Serializable
 	    	char [] buf = new char[1024];
 	    	for (int n = reader.read(buf); n > -1; n = reader.read(buf))
 	    	    content.append(buf, 0, n);
-//	    	System.out.println("last reaad: " + new StringBuilder(buf))
 	    	return content.toString();
     	}
     	catch (Exception ex)
@@ -554,31 +559,23 @@ public class Json implements java.io.Serializable
 				Json ref = resolved.get(refuri.toString());
 				if (ref == null)
 				{
-					ref = resolveRef(base, topdoc, refuri, resolved, expanded, uriResolver);
-					resolved.put(refuri.toString(), ref);					
-					ref = expandReferences(ref, topdoc, base, resolved, expanded, uriResolver);
+					ref = Json.object();
 					resolved.put(refuri.toString(), ref);
+					ref.with(resolveRef(base, topdoc, refuri, resolved, expanded, uriResolver));
 				}
 				json = ref;
 			}
 			else 
 			{
-				Json O = Json.object();
 				for (Map.Entry<String, Json> e : json.asJsonMap().entrySet())
-					O.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded, uriResolver));
-				json.with(O, new Json[0]);
+					json.set(e.getKey(), expandReferences(e.getValue(), topdoc, base, resolved, expanded, uriResolver));
 			}
 		}
 		else if (json.isArray())
 		{
-//			Json A = Json.array();
 			for (int i = 0; i < json.asJsonList().size(); i++)
-			{
-				//A.add(expandReferences(j, topdoc, base, resolved));
-				Json el = expandReferences(json.at(i), topdoc, base, resolved, expanded, uriResolver);
-				json.set(i, el);				
-			}
-//			return A;
+				json.set(i, 
+						 expandReferences(json.at(i), topdoc, base, resolved, expanded, uriResolver));
 		}
 		expanded.put(json,  json);
 		return json;
@@ -676,6 +673,8 @@ public class Json implements java.io.Serializable
     					errors = maybeError(errors, S.apply(param.at(i)));
     				if (uniqueitems != null && uniqueitems && param.asJsonList().lastIndexOf(param.at(i)) > i)
     					errors = maybeError(errors,Json.make("Element " + param.at(i) + " is duplicate in array."));
+    				if (errors != null && !errors.asJsonList().isEmpty())
+    					break;
     			}
     			if (size < min || size > max)
 					errors = maybeError(errors,Json.make("Array  " + param.toString(maxchars) + 
@@ -700,10 +699,9 @@ public class Json implements java.io.Serializable
     	class CheckObject implements Instruction
     	{
     		int min = 0, max = Integer.MAX_VALUE;
-    		HashSet<String> checked = new HashSet<String>();
     		Instruction additionalSchema = any;
-    		ArrayList<Instruction> props = new ArrayList<Instruction>();
-    		ArrayList<Instruction> patternProps = new ArrayList<Instruction>();
+    		ArrayList<CheckProperty> props = new ArrayList<CheckProperty>();
+    		ArrayList<CheckPatternProperty> patternProps = new ArrayList<CheckPatternProperty>();
     		
         	// Object validation
         	class CheckProperty implements Instruction 
@@ -718,27 +716,23 @@ public class Json implements java.io.Serializable
         			if (value == null)
         				return null;
         			else
-        			{
-        				checked.add(name);
         				return schema.apply(param.at(name));
-        			}
         		} 
         	}
         	
-        	class CheckPatternProperty implements Instruction 
+        	class CheckPatternProperty // implements Instruction 
         	{ 
         		Pattern pattern;
         		Instruction schema; 
         		public CheckPatternProperty(String pattern, Instruction schema) 
-        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }
-        		public Json apply(Json param)
+        			{ this.pattern = Pattern.compile(pattern); this.schema = schema; }        		
+        		public Json apply(Json param, Set<String> found)
         		{    	
         			Json errors = null;
         			for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
-        				if (pattern.matcher(e.getKey()).find())
-        				{
+        				if (pattern.matcher(e.getKey()).find()) {
+        					found.add(e.getKey());
         					errors = maybeError(errors, schema.apply(e.getValue()));
-        					checked.add(e.getKey());
         				}
         			return errors;
         		} 
@@ -748,11 +742,15 @@ public class Json implements java.io.Serializable
     		{
     			Json errors = null;
     			if (!param.isObject()) return errors;
-    			checked.clear();
-    			for (Instruction I : props)
+        		HashSet<String> checked = new HashSet<String>();
+    			for (CheckProperty I : props) {
+    				if (param.has(I.name)) checked.add(I.name);
     				errors = maybeError(errors, I.apply(param));
-    			for (Instruction I : patternProps)
-    				errors = maybeError(errors, I.apply(param));    			    			
+    			}
+    			for (CheckPatternProperty I : patternProps) {
+    				
+    				errors = maybeError(errors, I.apply(param, checked));
+    			}
     			if (additionalSchema != any) for (Map.Entry<String, Json> e : param.asJsonMap().entrySet())
     				if (!checked.contains(e.getKey()))
         				errors = maybeError(errors, additionalSchema == null ? 
@@ -842,13 +840,21 @@ public class Json implements java.io.Serializable
     		public Json apply(Json param)
     		{    			
     			int matches = 0;
-    			for (Instruction I : alternates)    				
-    				if (I.apply(param) == null)
+    			Json errors = Json.array();
+    			for (Instruction I : alternates)
+    			{
+    				Json result = I.apply(param);
+    				if (result == null)
     					matches++;
+    				else
+    					errors.add(result);
+    			}
     			if (matches != 1)
+    			{
 	    			return Json.array().add("Element " + param.toString(maxchars) + 
 	    					" must conform to exactly one of available sub-schemas, but not more " + 
-	    					schema.toString(maxchars));    			
+	    					schema.toString(maxchars)).add(errors);
+    			}
     			else
     				return null;
     		}    		
@@ -941,10 +947,11 @@ public class Json implements java.io.Serializable
     		if (S.has("not"))
     			seq.add(new CheckNot(compile(S.at("not"), compiled), S.at("not")));
     		
-    		if (S.has("required"))
+    		if (S.has("required") && S.at("required").isArray())
+    		{
     			for (Json p : S.at("required").asJsonList())
     				seq.add(new CheckPropertyPresent(p.asString()));
-    		
+    		}
     		CheckObject objectCheck = new CheckObject();
     		if (S.has("properties"))
     			for (Map.Entry<String, Json> p : S.at("properties").asJsonMap().entrySet())
@@ -1050,8 +1057,9 @@ public class Json implements java.io.Serializable
 						try { return Json.read(fetchContent(docuri.toURL())); } 
 						catch(Exception ex) { throw new RuntimeException(ex); }
 					}};
-    			this.theschema = expandReferences(theschema, 
-    											  theschema, 
+				this.theschema = theschema.dup();
+    			this.theschema = expandReferences(this.theschema, 
+    											  this.theschema, 
     											  this.uri, 
     											  new HashMap<String, Json>(), 
     											  new IdentityHashMap<Json, Json>(),
@@ -1066,6 +1074,11 @@ public class Json implements java.io.Serializable
     		Json result = Json.object("ok", true);
     		Json errors = start.apply(document);    		    		
     		return errors == null ? result : result.set("errors", errors).set("ok", false);
+    	}
+    	
+    	public Json toJson() 
+    	{
+    		return theschema;
     	}
     	
     	public Json generate(Json options)
@@ -1425,7 +1438,7 @@ public class Json implements java.io.Serializable
 		Json x = at(property);
 		if (x == null)
 		{
-			set(property, def);
+//			set(property, def);
 			return def;
 		}
 		else
@@ -1614,6 +1627,7 @@ public class Json implements java.io.Serializable
 	 * </p>
 	 * @param object The object or array whose properties or elements must be added to this
 	 * Json object or array.
+	 * @param options A sequence of options that governs the merging process.
 	 * @return this
 	 */
 	public Json with(Json object, Json[]options) { throw new UnsupportedOperationException(); }
@@ -1807,15 +1821,23 @@ public class Json implements java.io.Serializable
         for (Json opt : options)
         {
             if (opt.isString())
-                result.at("", object()).set(opt.asString(), true);
+            {
+            	if (!result.has(""))
+            		result.set("", object());
+                result.at("").set(opt.asString(), true);
+            }
             else
             {
-                Json forPaths = opt.at("for", array(""));
+            	if (!opt.has("for"))
+            		opt.set("for", array(""));
+                Json forPaths = opt.at("for");
                 if (!forPaths.isArray())
                     forPaths = array(forPaths);
                 for (Json path : forPaths.asJsonList())
                 {
-                    Json at_path = result.at(path.asString(), object());
+                	if (!result.has(path.asString()))
+                		result.set(path.asString(), object());
+                    Json at_path = result.at(path.asString());
                     at_path.set("merge", opt.is("merge", true));
                     at_path.set("dup", opt.is("dup", true));
                     at_path.set("sort", opt.is("sort", true));
@@ -1848,6 +1870,51 @@ public class Json implements java.io.Serializable
 	
 	static NullJson topnull = new NullJson();
 
+	/**
+	 * <p>
+	 * Set the parent (i.e. enclosing element) of Json element.   
+	 * </p>
+	 * 
+	 * @param el
+	 * @param parent
+	 */
+	static void setParent(Json el, Json parent)
+	{
+		if (el.enclosing == null)
+			el.enclosing = parent;
+		else if (el.enclosing instanceof ParentArrayJson)
+			((ParentArrayJson)el.enclosing).L.add(parent);
+		else
+		{
+			ParentArrayJson A = new ParentArrayJson();
+			A.L.add(el.enclosing);
+			A.L.add(parent);
+			el.enclosing = A;
+		}		
+	}
+
+	/**
+	 * <p>
+	 * Remove/unset the parent (i.e. enclosing element) of Json element.   
+	 * </p>
+	 * 
+	 * @param el
+	 * @param parent
+	 */
+	static void removeParent(Json el, Json parent)
+	{
+		if (el.enclosing == parent)
+			el.enclosing = null;
+		else if (el.enclosing.isArray())
+		{
+			ArrayJson A = (ArrayJson)el.enclosing;
+			int idx = 0;
+			while (A.L.get(idx) != parent && idx < A.L.size()) idx++;
+			if (idx < A.L.size())
+				A.L.remove(idx);
+		}
+	}
+	
 	static class BooleanJson extends Json
 	{
 		private static final long serialVersionUID = 1L;
@@ -1971,7 +2038,9 @@ public class Json implements java.io.Serializable
         
         public Json set(int index, Object value) 
         { 
-        	L.set(index, make(value));
+        	Json jvalue = make(value);
+        	L.set(index, jvalue);
+        	setParent(jvalue, this);
         	return this;
         }
         
@@ -1993,7 +2062,12 @@ public class Json implements java.io.Serializable
 		public Object getValue() { return asList(); }
 		public boolean isArray() { return true; }
 		public Json at(int index) { return L.get(index); }
-		public Json add(Json el) { L.add(el); el.enclosing = this; return this; }
+		public Json add(Json el) 
+		{ 
+			L.add(el);
+			setParent(el, this);
+			return this; 
+		}
 		public Json remove(Json el) { L.remove(el); el.enclosing = null; return this; }
 
         boolean isEqualJson(Json left, Json right)
@@ -2136,12 +2210,20 @@ public class Json implements java.io.Serializable
 			return toString(Integer.MAX_VALUE);
 		}
 		
-		public String toString(int maxCharacters) 
+		public String toString(int maxCharacters)
+		{
+			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
+		}
+		
+		String toStringImpl(int maxCharacters, Map<Json, Json> done)
 		{
 			StringBuilder sb = new StringBuilder("[");
 			for (Iterator<Json> i = L.iterator(); i.hasNext(); )
 			{
-				String s = i.next().toString(maxCharacters);
+				Json value = i.next();
+				String s = value.isObject() ? ((ObjectJson)value).toStringImpl(maxCharacters, done)
+							: value.isArray() ? ((ArrayJson)value).toStringImpl(maxCharacters, done)
+							: value.toString(maxCharacters);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				else
@@ -2163,6 +2245,16 @@ public class Json implements java.io.Serializable
 		{			
 			return x instanceof ArrayJson && ((ArrayJson)x).L.equals(L); 
 		}		
+	}
+	
+	static class ParentArrayJson extends ArrayJson 
+	{
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		
 	}
 	
 	static class ObjectJson extends Json
@@ -2207,6 +2299,8 @@ public class Json implements java.io.Serializable
 
         protected Json withOptions(Json other, Json allOptions, String path)
         {
+        	if (!allOptions.has(path))
+        		allOptions.set(path, object());
             Json options = allOptions.at(path, object());
             boolean duplicate = options.is("dup", true);
             if (options.is("merge", true))
@@ -2252,7 +2346,7 @@ public class Json implements java.io.Serializable
 				throw new IllegalArgumentException("Null property names are not allowed, value is " + el);
 			if (el == null)
 				el = nil();
-			el.enclosing = this;
+			setParent(el, this);
 			object.put(property, el);
 			return this;
 		}
@@ -2260,16 +2354,14 @@ public class Json implements java.io.Serializable
 		public Json atDel(String property) 
 		{
 			Json el = object.remove(property);
-			if (el != null)
-				el.enclosing = null;
+			removeParent(el, this);
 			return el;
 		}
 		
 		public Json delAt(String property) 
 		{
 			Json el = object.remove(property);
-			if (el != null)
-				el.enclosing = null;
+			removeParent(el, this);
 			return this;
 		}
 		
@@ -2292,7 +2384,15 @@ public class Json implements java.io.Serializable
 		
 		public String toString(int maxCharacters)
 		{
+			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
+		}
+		
+		String toStringImpl(int maxCharacters, Map<Json, Json> done)
+		{
 			StringBuilder sb = new StringBuilder("{");
+			if (done.containsKey(this))
+				return sb.append("...}").toString();
+			done.put(this, this);
 			for (Iterator<Map.Entry<String, Json>> i = object.entrySet().iterator(); i.hasNext(); )
 			{
 				Map.Entry<String, Json> x  = i.next();
@@ -2300,7 +2400,9 @@ public class Json implements java.io.Serializable
 				sb.append(escaper.escapeJsonString(x.getKey()));
 				sb.append('"');
 				sb.append(":");
-				String s = x.getValue().toString(maxCharacters);
+				String s = x.getValue().isObject() ? ((ObjectJson)x.getValue()).toStringImpl(maxCharacters, done)
+								: x.getValue().isArray() ? ((ArrayJson)x.getValue()).toStringImpl(maxCharacters, done) 
+								: x.getValue().toString(maxCharacters);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				sb.append(s);
@@ -2482,12 +2584,22 @@ public class Json implements java.io.Serializable
 	  }
 	}	
 	
+	public static class MalformedJsonException extends RuntimeException
+	{
+		private static final long serialVersionUID = 1L;
+		public MalformedJsonException(String msg) { super(msg); }
+	}
+	
 	private static class Reader
 	{
-	    private static final Object OBJECT_END = new Object();
-	    private static final Object ARRAY_END = new Object();
-	    private static final Object COLON = new Object();
-	    private static final Object COMMA = new Object();
+	    private static final Object OBJECT_END = new String("}");
+	    private static final Object ARRAY_END = new String("]");
+	    private static final Object OBJECT_START = new String("{");
+	    private static final Object ARRAY_START = new String("[");
+	    private static final Object COLON = new String(":");
+	    private static final Object COMMA = new String(",");
+	    private static final HashSet<Object> PUNCTUATION = new HashSet<Object>(
+	    		Arrays.asList(OBJECT_END, OBJECT_START, ARRAY_END, ARRAY_START, COLON, COMMA));
 	    public static final int FIRST = 0;
 	    public static final int CURRENT = 1;
 	    public static final int NEXT = 2;
@@ -2513,7 +2625,7 @@ public class Json implements java.io.Serializable
 	    private char next() 
 	    {
 	        if (it.getIndex() == it.getEndIndex())
-	            throw new RuntimeException("Reached end of input at the " + 
+	            throw new MalformedJsonException("Reached end of input at the " + 
 	                                       it.getIndex() + "th character.");
 	        c = it.next();
 	        return c;
@@ -2541,7 +2653,7 @@ public class Json implements java.io.Serializable
 	        				if (next() == '*' && next() == '/')
 	        						break;
 	        			if (c == CharacterIterator.DONE)
-	        				throw new RuntimeException("Unterminated comment while parsing JSON string.");
+	        				throw new MalformedJsonException("Unterminated comment while parsing JSON string.");
 	        		}
 	        		else if (c == '/')
 	        			while (c != '\n' && c != CharacterIterator.DONE)
@@ -2585,6 +2697,12 @@ public class Json implements java.io.Serializable
 	        return read(new StringCharacterIterator(string), FIRST);
 	    }
 
+	    private void expected(Object expectedToken, Object actual)
+	    {
+	    	if (expectedToken != actual)
+	    		throw new MalformedJsonException("Expected " + expectedToken + ", but got " + actual + " instead");
+	    }
+	    
 	    @SuppressWarnings("unchecked")
 		private <T> T read() 
 	    {
@@ -2602,19 +2720,19 @@ public class Json implements java.io.Serializable
 	            case ':': token = COLON; break;
 	            case 't':
 	                if (c != 'r' || next() != 'u' || next() != 'e')
-	                	throw new RuntimeException("Invalid JSON token: expected 'true' keyword.");
+	                	throw new MalformedJsonException("Invalid JSON token: expected 'true' keyword.");
 	                next();
 	                token = factory().bool(Boolean.TRUE);
 	                break;
 	            case'f':
 	                if (c != 'a' || next() != 'l' || next() != 's' || next() != 'e')
-	                	throw new RuntimeException("Invalid JSON token: expected 'false' keyword.");
+	                	throw new MalformedJsonException("Invalid JSON token: expected 'false' keyword.");
 	                next();
 	                token = factory().bool(Boolean.FALSE);
 	                break;
 	            case 'n':
 	                if (c != 'u' || next() != 'l' || next() != 'l')
-	                	throw new RuntimeException("Invalid JSON token: expected 'null' keyword.");
+	                	throw new MalformedJsonException("Invalid JSON token: expected 'null' keyword.");
 	                next();
 	                token = nil();
 	                break;
@@ -2623,7 +2741,7 @@ public class Json implements java.io.Serializable
 	                if (Character.isDigit(c) || c == '-') {
 	                    token = readNumber();
 	                }
-	                else throw new RuntimeException("Invalid JSON near position: " + it.getIndex());
+	                else throw new MalformedJsonException("Invalid JSON near position: " + it.getIndex());
 	        }
 	        return (T)token;
 	    }
@@ -2632,12 +2750,13 @@ public class Json implements java.io.Serializable
 	    {
 	    	Object key = read();
 	    	if (key == null)
-                throw new RuntimeException(
-                        "Missing object key (don't forget to put quotes!).");
-	    	else if (key != OBJECT_END)
-	    		return ((Json)key).asString();
+                throw new MalformedJsonException("Missing object key (don't forget to put quotes!).");
+	    	else if (key == OBJECT_END)
+	    		return null;
+	    	else if (PUNCTUATION.contains(key))
+                throw new MalformedJsonException("Missing object key, found: " + key);
 	    	else
-	    		return key.toString();
+	    		return ((Json)key).asString();
 	    }
 	    
 	    private Json readObject() 
@@ -2645,15 +2764,19 @@ public class Json implements java.io.Serializable
 	        Json ret = object();
 	        String key = readObjectKey();
 	        while (token != OBJECT_END) 
-	        {
-	            read(); // should be a colon
+	        {	        	
+	            expected(COLON, read()); // should be a colon
 	            if (token != OBJECT_END) 
 	            {
 	            	Json value = read();
 	                ret.set(key, value);
 	                if (read() == COMMA) {
 	                    key = readObjectKey();
+	                    if (key == null || PUNCTUATION.contains(key))
+	                    	throw new MalformedJsonException("Expected a property name, but found: " + key);
 	                }
+	                else
+	                	expected(OBJECT_END, token);
 	            }
 	        }
 	        return ret;
@@ -2665,11 +2788,16 @@ public class Json implements java.io.Serializable
 	        Object value = read();
 	        while (token != ARRAY_END) 
 	        {
+                if (PUNCTUATION.contains(value))
+                	throw new MalformedJsonException("Expected array element, but found: " + value);	                	        	
 	            ret.add((Json)value);
-	            if (read() == COMMA) 
+	            if (read() == COMMA) { 
 	                value = read();
-	            else if (token != ARRAY_END)
-	                throw new RuntimeException("Unexpected token in array " + token);
+	                if (value == ARRAY_END)
+	                	throw new MalformedJsonException("Expected array element, but found end of array after command.");
+	            }
+                else
+                	expected(ARRAY_END, token);
 	        }
 	        return ret;
 	    }

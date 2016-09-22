@@ -1,0 +1,11 @@
+{
+  "description":"Testing nested definitions",
+  "definitions":{
+    "nested" : {
+      "type":"object"
+    }
+  },
+  "type": "array",  
+  "items": { "$ref": "#/definitions/nested"},
+  "minItems": 1
+}
