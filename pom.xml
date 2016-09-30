@@ -76,9 +76,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
+<!--
         <configuration>
             <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
+-->
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -88,7 +90,6 @@
           </execution>
         </executions>
       </plugin>
-      <!-- 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
@@ -102,7 +103,6 @@
           </execution>
         </executions>
       </plugin>
-       -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
