@@ -14,7 +14,7 @@
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
-  <version>1.4.0</version>
+  <version>1.5.0-SNAPSHOT</version>
   <url>http://sharegov.org/mjson</url>
   <description>A concise, loosely typed Java API for Json</description>
 
