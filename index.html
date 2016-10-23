@@ -48,6 +48,7 @@
 <li>Designed as a general purpose data structure for use in Java</li>
 <li>Parent pointers and <code>up</code> method to traverse the JSON structure</li>
 <li>Concise methods to read (<code>Json.at</code>), modify (<code>Json.set</code>, <code>Json.add</code>), duplicate (<code>Json.dup</code>), merge (<code>Json.with</code>) </li>
+<li>Flexible merging of deep structures, see <a href="https://github.com/bolerio/mjson/wiki/Deep-Merging" target="_blank">Deep Merging</a></li>
 <li>Methods for type-check (e.g. <code>Json.isString()</code>) and access to underlying Java value (e.g. <code>Json.asString()</code>)</li>
 <li>Method chaining</li>
 <li>Pluggable factory to build your own support for arbitrary Java&lt;-&gt;Json mapping</li>
@@ -74,13 +75,13 @@ It is in Maven central, so add this to your pom.xml if you are using Maven:
 <pre><code><dependency>
   &lt;groupId&gt;org.sharegov&lt;/groupId&gt;
   &lt;artifactId&gt;mjson&lt;/artifactId&gt;
-  &lt;version&gt;1.3&lt;/version&gt;
+  &lt;version&gt;1.4.0&lt;/version&gt;
 </dependency>
 </code></pre>
 
 <p>You can also simply get the Json.java from the GitHub project and include it in your project. Or download a jar build from:</p>
 
-<a href="http://repo1.maven.org/maven2/org/sharegov/mjson/1.3/mjson-1.3.jar">Direct link to mjson-1.3.jar at Maven Central</a>
+<a href="http://repo1.maven.org/maven2/org/sharegov/mjson/1.4.0/mjson-1.4.0.jar">Direct link to mjson-1.4.0.jar at Maven Central</a>
 
 <p>
 Or get the latest snapshot (deployed snapshots are generally stable and contain 
@@ -90,9 +91,22 @@ latest functionality):
 <pre><code><dependency>
   &lt;groupId&gt;org.sharegov&lt;/groupId&gt;
   &lt;artifactId&gt;mjson&lt;/artifactId&gt;
-  &lt;version&gt;1.4-SNAPSHOT&lt;/version&gt;
+  &lt;version&gt;1.5-SNAPSHOT&lt;/version&gt;
 </dependency>
 </code></pre>
+
+<h3>
+<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>
+Extensions
+</h3>
+
+<p>
+A separate project collects extension modules to the library. While most other libraries bundle all functionality in one package,
+undersandably for convenience, we have instead opted to to keep the library as small as possible and with 0 external dependencies.
+So "big" functional areas are covered by this separate project, to be found at: 
+<a target="_blank" href="https://github.com/bolerio/mjson-ext">https://github.com/bolerio/mjson-ext</a>.
+</p>
+
 
 <h3>
 <a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>
