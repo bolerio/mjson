@@ -2014,7 +2014,7 @@ public class Json implements java.io.Serializable
 		}				
 	}
 	
-	static class ArrayJson extends Json
+	static class ArrayJson extends Json implements Iterable
 	{
 		private static final long serialVersionUID = 1L;
 		
@@ -2022,9 +2022,13 @@ public class Json implements java.io.Serializable
 		
 		ArrayJson() { }
 		ArrayJson(Json e) { super(e); }
-		
 
-        public Json dup() 
+		@Override
+		public Iterator iterator() {
+			return L.iterator();
+		}
+
+		public Json dup()
         { 
             ArrayJson j = new ArrayJson();
             for (Json e : L)
