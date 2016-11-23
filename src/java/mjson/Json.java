@@ -252,7 +252,7 @@ import java.util.regex.Pattern;
  * @author Borislav Iordanov
  * @version 1.4
  */
-public class Json implements java.io.Serializable
+public class Json implements java.io.Serializable, Iterable
 {
 	private static final long serialVersionUID = 1L;
 
@@ -425,6 +425,23 @@ public class Json implements java.io.Serializable
     	 */
     	//Json generate(Json options);
     }
+
+	@Override
+	public Iterator iterator() {
+		return new Iterator() {
+			@Override
+			public boolean hasNext() {
+				return false;
+			}
+			@Override
+			public Object next() {
+				return null;
+			}
+			@Override
+			public void remove() {
+			}
+		};
+	}
 
     static String fetchContent(URL url)
     {
@@ -1332,7 +1349,26 @@ public class Json implements java.io.Serializable
 		 */
 		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
-	
+
+	public abstract class JsonSingleValueIterator<T> implements Iterator {
+		private boolean retrieved = false;
+		@Override
+		public boolean hasNext() {
+			return !retrieved;
+		}
+
+		@Override
+		public T next() {
+			retrieved = true;
+			return null;
+		}
+
+		@Override
+		public void remove() {
+		}
+	}
+
+
 	/**
 	 * <p>
 	 * Convert an arbitrary Java instance to a {@link Json} instance.   
@@ -1866,6 +1902,18 @@ public class Json implements java.io.Serializable
 		{
 			return x instanceof NullJson;
 		}
+
+		@Override
+		public Iterator iterator() {
+			return new JsonSingleValueIterator<Object>() {
+				@Override
+				public Object next() {
+					super.next();
+					return null;
+				}
+			};
+		}
+
 	}
 	
 	static NullJson topnull = new NullJson();
@@ -1936,7 +1984,18 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{
 			return x instanceof BooleanJson && ((BooleanJson)x).val == val;
-		}		
+		}
+		@Override
+		public Iterator iterator() {
+			return new JsonSingleValueIterator<Boolean>() {
+				@Override
+				public Boolean next() {
+					super.next();
+					return val;
+				}
+			};
+		}
+
 	}
 
 	static class StringJson extends Json
@@ -1979,7 +2038,19 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{			
 			return x instanceof StringJson && ((StringJson)x).val.equals(val); 
-		}		
+		}
+
+		@Override
+		public Iterator iterator() {
+			return new JsonSingleValueIterator<String>() {
+				@Override
+				public String next() {
+					super.next();
+					return val;
+				}
+			};
+		}
+
 	}
 
 	static class NumberJson extends Json
@@ -2011,10 +2082,22 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{			
 			return x instanceof NumberJson && val.doubleValue() == ((NumberJson)x).val.doubleValue(); 
-		}				
+		}
+
+		@Override
+		public Iterator iterator() {
+			return new JsonSingleValueIterator<Number>() {
+				@Override
+				public Number next() {
+					super.next();
+					return val;
+				}
+			};
+		}
+
 	}
 	
-	static class ArrayJson extends Json implements Iterable
+	static class ArrayJson extends Json
 	{
 		private static final long serialVersionUID = 1L;
 		
@@ -2024,7 +2107,7 @@ public class Json implements java.io.Serializable
 		ArrayJson(Json e) { super(e); }
 
 		@Override
-		public Iterator iterator() {
+		public Iterator<Json> iterator() {
 			return L.iterator();
 		}
 
@@ -2266,7 +2349,12 @@ public class Json implements java.io.Serializable
 		private static final long serialVersionUID = 1L;
 		
 		Map<String, Json> object = new HashMap<String, Json>();
-		
+
+		@Override
+		public Iterator<Map.Entry<String, Json>> iterator() {
+			return object.entrySet().iterator();
+		}
+
 		ObjectJson() { }
 		ObjectJson(Json e) { super(e); }
 
