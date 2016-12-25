@@ -10,7 +10,7 @@
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>mjson</bundle.namespace>    
   </properties>      
-  <packaging>${packageit}</packaging>  
+  <packaging>jar</packaging>  
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
