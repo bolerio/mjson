@@ -250,9 +250,9 @@ import java.util.regex.Pattern;
  * 	   System.out.println("Validation error " + err);
  * </code></pre>
  * @author Borislav Iordanov
- * @version 1.4
+ * @version 2.0.0
  */
-public class Json implements java.io.Serializable, Iterable
+public class Json implements java.io.Serializable, Iterable<Json>
 {
 	private static final long serialVersionUID = 1L;
 
@@ -427,19 +427,16 @@ public class Json implements java.io.Serializable, Iterable
     }
 
 	@Override
-	public Iterator iterator() {
-		return new Iterator() {
+	public Iterator<Json> iterator() 
+	{
+		return new Iterator<Json>() 
+		{
 			@Override
-			public boolean hasNext() {
-				return false;
-			}
+			public boolean hasNext() { return false; }
 			@Override
-			public Object next() {
-				return null;
-			}
+			public Json next() { return null; }
 			@Override
-			public void remove() {
-			}
+			public void remove() { }
 		};
 	}
 
@@ -1350,7 +1347,7 @@ public class Json implements java.io.Serializable, Iterable
 		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
 
-	public abstract class JsonSingleValueIterator<T> implements Iterator {
+	static class JsonSingleValueIterator implements Iterator<Json> {
 		private boolean retrieved = false;
 		@Override
 		public boolean hasNext() {
@@ -1358,7 +1355,7 @@ public class Json implements java.io.Serializable, Iterable
 		}
 
 		@Override
-		public T next() {
+		public Json next() {
 			retrieved = true;
 			return null;
 		}
@@ -1904,12 +1901,12 @@ public class Json implements java.io.Serializable, Iterable
 		}
 
 		@Override
-		public Iterator iterator() {
-			return new JsonSingleValueIterator<Object>() {
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
 				@Override
-				public Object next() {
+				public Json next() {
 					super.next();
-					return null;
+					return NullJson.this;
 				}
 			};
 		}
@@ -1986,12 +1983,12 @@ public class Json implements java.io.Serializable, Iterable
 			return x instanceof BooleanJson && ((BooleanJson)x).val == val;
 		}
 		@Override
-		public Iterator iterator() {
-			return new JsonSingleValueIterator<Boolean>() {
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
 				@Override
-				public Boolean next() {
+				public Json next() {
 					super.next();
-					return val;
+					return BooleanJson.this;
 				}
 			};
 		}
@@ -2041,12 +2038,12 @@ public class Json implements java.io.Serializable, Iterable
 		}
 
 		@Override
-		public Iterator iterator() {
-			return new JsonSingleValueIterator<String>() {
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
 				@Override
-				public String next() {
+				public Json next() {
 					super.next();
-					return val;
+					return StringJson.this;
 				}
 			};
 		}
@@ -2085,12 +2082,12 @@ public class Json implements java.io.Serializable, Iterable
 		}
 
 		@Override
-		public Iterator iterator() {
-			return new JsonSingleValueIterator<Number>() {
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
 				@Override
-				public Number next() {
+				public Json next() {
 					super.next();
-					return val;
+					return NumberJson.this;
 				}
 			};
 		}
@@ -2351,8 +2348,8 @@ public class Json implements java.io.Serializable, Iterable
 		Map<String, Json> object = new HashMap<String, Json>();
 
 		@Override
-		public Iterator<Map.Entry<String, Json>> iterator() {
-			return object.entrySet().iterator();
+		public Iterator<Json> iterator() {
+			return object.values().iterator();
 		}
 
 		ObjectJson() { }
