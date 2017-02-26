@@ -10,14 +10,14 @@
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>mjson</bundle.namespace>    
   </properties>      
-  <packaging>${packageit}</packaging>  
+  <packaging>bundle</packaging>  
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
-  <version>1.4.0</version>
+  <version>1.4.1</version>
   <url>http://sharegov.org/mjson</url>
   <description>A concise, loosely typed Java API for Json</description>
-
+  
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -25,7 +25,7 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
+  
   <developers>
     <developer>
       <id>boris</id>
