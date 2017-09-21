@@ -30,6 +30,13 @@ public class TestBasics
 	}
 
 	@Test
+	public void testNilMemoryLeak()
+	{
+		Json nil = Json.nil();
+		Assert.assertNull(nil.enclosing);
+	}
+
+	@Test
 	public void testNumber()
 	{
 		Json n1 = Json.make(567);
