@@ -1,6 +1,5 @@
-package testmjson;
+package mjson;
 
-import mjson.Json;
 import static mjson.Json.*;
 import org.junit.Test;
 import org.junit.Assert;
@@ -18,7 +17,7 @@ public class TestBasics
 		Assert.assertEquals(b1, b2);
 		Assert.assertEquals(Boolean.FALSE, Json.make(false).getValue());
 	}
-	
+
 	@Test
 	public void testNil()
 	{
@@ -29,7 +28,7 @@ public class TestBasics
 		Assert.assertFalse(nil == nil2);
 		Assert.assertEquals(nil, nil2);
 	}
-	
+
 	@Test
 	public void testNumber()
 	{
@@ -47,7 +46,7 @@ public class TestBasics
 		Assert.assertEquals(Double.MAX_VALUE, Json.factory().number(Double.MAX_VALUE).getValue());
 		Assert.assertEquals(Integer.MIN_VALUE, Json.factory().number(Integer.MIN_VALUE).getValue());
 	}
-	
+
 	@Test
 	public void testString()
 	{
@@ -63,7 +62,7 @@ public class TestBasics
 		Json s3_lower = Json.make("Case Sensitive".toLowerCase());
 		Assert.assertNotEquals(s3, s3_lower);
 	}
-	
+
 	@Test
 	public void testArray()
 	{
@@ -80,7 +79,7 @@ public class TestBasics
 		Assert.assertEquals(mixed, mixeddup);
 		Assert.assertEquals("s", mixeddup.at(1).getValue());
 	}
-	
+
 	@Test
 	public void testObject()
 	{

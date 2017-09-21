@@ -1,6 +1,5 @@
-package testmjson;
+package mjson;
 
-import mjson.Json;
 import static mjson.Json.*;
 
 import org.junit.Assert;
@@ -15,21 +14,21 @@ public class TestEnclosing
 		Json s = make("hi");
 		obj.set("greet", s);
 		Assert.assertTrue(obj == s.up());
-		
+
 		Json nested = object();
 		obj.set("nested", nested);
 		Assert.assertTrue(obj == nested.up());
-		
+
 		nested.set("parent", obj);
 		Assert.assertTrue(nested == obj.up());
-		
+
 		Json nested2 = object();
 		obj.set("nested2", nested2);
 		nested2.set("parent", obj);
 		Assert.assertTrue(obj == nested2.up());
 		Assert.assertTrue(obj.up().asJsonList().contains(nested2));
 	}
-	
+
 	@Test
 	public void testParentArray()
 	{
@@ -40,7 +39,7 @@ public class TestEnclosing
 		System.out.println(i.up());
 		Json arr2 = array();
 		arr2.add(i);
-		
+
 		System.out.println(i.up());
 		Assert.assertTrue(i.up().asJsonList().contains(arr));
 		Assert.assertTrue(i.up().asJsonList().contains(arr2));
@@ -55,7 +54,7 @@ public class TestEnclosing
 		String asstring = x.toString();
 		Assert.assertTrue(asstring.contains("tuple"));
 	}
-	
+
 	/**
 	 * When we duplicate a deeply nested JSON structure, the parent chains must
 	 * be properly replicated.
@@ -65,10 +64,10 @@ public class TestEnclosing
 	{
 
 	}
-	
+
 	@Test
 	public void testDuplicateGraphWithCycles()
 	{
-		
+
 	}
 }

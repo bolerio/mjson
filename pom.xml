@@ -8,9 +8,9 @@
   <properties>
     <packageit>bundle</packageit>
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
-    <bundle.namespace>mjson</bundle.namespace>    
-  </properties>      
-  <packaging>jar</packaging>  
+    <bundle.namespace>mjson</bundle.namespace>
+  </properties>
+  <packaging>jar</packaging>
   <groupId>org.sharegov</groupId>
   <artifactId>mjson</artifactId>
   <name>Minimal JSON Library</name>
@@ -76,11 +76,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-<!--
         <configuration>
             <additionalparam>-Xdoclint:none</additionalparam>
         </configuration>
--->
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -138,15 +136,15 @@
               <directory>${project.basedir}/src/test/resources</directory>
             </testResource>
           </testResources>
-        </configuration>        
-      </plugin> 
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <version>2.5.3</version>
         <extensions>true</extensions>
         <configuration>
- 		  <manifestLocation>META-INF</manifestLocation>        
+ 		  <manifestLocation>META-INF</manifestLocation>
           <instructions>
             <Bundle-SymbolicName>${project.groupId}-${project.artifactId};singleton:=true</Bundle-SymbolicName>
             <Bundle-Name>${project.name}</Bundle-Name>
@@ -163,12 +161,12 @@
         </dependencies>
       </plugin>
     </plugins>
-  </build>  
-  <dependencies>  
+  </build>
+  <dependencies>
     <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
-    </dependency>     
-  </dependencies>  
+    </dependency>
+  </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package testmjson;
+package mjson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -16,14 +16,12 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import mjson.Json;
-
 /**
- * 
+ *
  * @author Borislav Iordanov
  *
  */
-public class TestSchemas 
+public class TestSchemas
 {
 	public static byte[] getBytesFromStream(InputStream is, boolean close)
 			throws IOException
@@ -44,13 +42,13 @@ public class TestSchemas
 				is.close();
 		}
 	}
-	
+
 	public static String readFile(File file)
 	{
 		InputStream in = null;
 		try
 		{
-			in = new FileInputStream(file);				
+			in = new FileInputStream(file);
 			return new String(getBytesFromStream(in, true));
 		}
 		catch (IOException e)
@@ -62,7 +60,7 @@ public class TestSchemas
 			if (in != null) try { in.close(); } catch (Throwable t) { }
 		}
 	}
-	
+
 	public static String readTextResource(String resource)
 	{
 		InputStream in = TestSchemas.class.getResourceAsStream(resource);
@@ -87,7 +85,7 @@ public class TestSchemas
 		try
 		{
 			Enumeration<URL> en = TestSchemas.class.getClassLoader().getResources(name);
-			if (en.hasMoreElements()) 
+			if (en.hasMoreElements())
 			{
 			    URL resource = en.nextElement();
 			    File resourceFile = new File(resource.toURI());
@@ -112,12 +110,12 @@ public class TestSchemas
 		}
 		return L;
 	}
-	
+
 	/**
 	 * Test a schema against a document that should validate and then
 	 * against a document that should fail to validate.
-	 * @param schema 
-	 * @param correct 
+	 * @param schema
+	 * @param correct
 	 * @param incorrect
 	 */
 	public void doTest(Json schema, Json correct, Json incorrect)
@@ -128,8 +126,8 @@ public class TestSchemas
 	/**
 	 * Test a schema against a document that should validate and then
 	 * against a document that should fail to validate.
-	 * @param schema 
-	 * @param correct 
+	 * @param schema
+	 * @param correct
 	 * @param incorrect
 	 */
 	public void doTest(Json.Schema schema, Json correct, Json incorrect)
@@ -138,31 +136,31 @@ public class TestSchemas
 		if (correct != null)
 		{
 			ok = schema.validate(correct);
-			Assert.assertTrue(ok.at("errors", "").toString(), ok.at("ok").asBoolean());			
+			Assert.assertTrue(ok.at("errors", "").toString(), ok.at("ok").asBoolean());
 		}
-		
+
 		if (incorrect != null)
 		{
 			ok = schema.validate(incorrect);
 			Assert.assertFalse(ok.at("ok").asBoolean());
 		}
 	}
-	
+
 	@Test
 	public void testType()
 	{
 		doTest(Json.object("type", "string"), Json.make("asdfasd"), Json.array());
-		doTest(Json.object("type", "array"), Json.array(), Json.make("asdfasd"));		
+		doTest(Json.object("type", "array"), Json.array(), Json.make("asdfasd"));
 		doTest(Json.object("type", "object"), Json.object("asdf",23423), Json.nil());
 		doTest(Json.object("type", "boolean"), Json.make(true), Json.object("asdf",23423));
 		doTest(Json.object("type", "null"), Json.nil(), Json.make(false));
-		doTest(Json.object("type", "number"), Json.make(23423.5345), Json.make("gdfgsdf"));		
-		doTest(Json.object("type", "integer"), Json.make(5345), Json.make(5345.534));		
-		doTest(Json.object("type", "any"), Json.make(5345), null);		
+		doTest(Json.object("type", "number"), Json.make(23423.5345), Json.make("gdfgsdf"));
+		doTest(Json.object("type", "integer"), Json.make(5345), Json.make(5345.534));
+		doTest(Json.object("type", "any"), Json.make(5345), null);
 		doTest(Json.object("type", "any"), Json.make("Gasgfdsf"), null);
 		doTest(Json.object("type", "any"), Json.array(), null);
 	}
-	
+
 	@Test
 	public void testEnum()
 	{
@@ -180,29 +178,29 @@ public class TestSchemas
 		Json.Schema schema = Json.schema(TU.resource("/schemas_data/schema_with_defs.json").toURI());
 		Json data = Json.array(Json.object());
 		Json result = schema.validate(data);
-		if (!result.is("ok", true)) 
+		if (!result.is("ok", true))
 		{
 			System.err.println(result.at("errors"));
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	public void testOpenCirmSchema() throws URISyntaxException
 	{
 		Json.Schema schema = Json.schema(TU.resource("/schemas_data/json_case_schema.json").toURI());
 		Json data = Json.read(TU.resource("/schemas_data/json_data.json"));
 		Json result = schema.validate(data);
-		if (!result.is("ok", true)) 
+		if (!result.is("ok", true))
 		{
 			System.err.println(result.at("errors"));
 			Assert.fail();
 		}
 	}
-	
+
 	public Object[] addTests()
 	{
-		List<TestJsonSchemaSuite> tests = new ArrayList<TestJsonSchemaSuite>(); 
+		List<TestJsonSchemaSuite> tests = new ArrayList<TestJsonSchemaSuite>();
 		for (Map.Entry<String, String> test : testResources("suite").entrySet())
 		{
 			Json set = Json.read(test.getValue());
@@ -228,7 +226,7 @@ public class TestSchemas
 		}
 		return tests.toArray();
 	}
-	
+
 	public static void main(String [] argv)
 	{
 //		String content = TestSchemas.readFile(new File("c:/work/mjson/schema.json"));
