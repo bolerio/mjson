@@ -1,4 +1,4 @@
-package testmjson;
+package mjson;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,12 +12,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import junit.framework.AssertionFailedError;
-import mjson.Json;
 
 /**
  * Run a test from the https://github.com/json-schema/JSON-Schema-Test-Suite
  * test spec.
- * 
+ *
  * @author Borislav Iordanov
  *
  */
@@ -29,10 +28,10 @@ public class TestJsonSchemaSuite
 	private Json.Schema schema;
 	private Json data;
 	private boolean valid;
-	
+
 	 @Parameters
-     public static Collection<Object[]> data() {    	 
- 		List<Object[]> tests = new ArrayList<Object[]>(); 
+     public static Collection<Object[]> data() {
+ 		List<Object[]> tests = new ArrayList<Object[]>();
  		for (Map.Entry<String, String> test : TestSchemas.testResources("suite").entrySet())
  		{
  			Json set = Json.read(test.getValue());
@@ -58,11 +57,11 @@ public class TestJsonSchemaSuite
  		}
  		return tests;
     }
-	    
-	public TestJsonSchemaSuite(String group, 
-						 String description, 
-						 Json.Schema schema, 
-						 Json data, 
+
+	public TestJsonSchemaSuite(String group,
+						 String description,
+						 Json.Schema schema,
+						 Json data,
 						 boolean valid)
 	{
 		this.group = group;
@@ -71,7 +70,7 @@ public class TestJsonSchemaSuite
 		this.data = data;
 		this.valid = valid;
 	}
-	
+
 	@Test
 	public void doTest()
 	{
@@ -88,7 +87,7 @@ public class TestJsonSchemaSuite
 		}
 		catch (Throwable t)
 		{
-			System.err.println("Exception while running test " + description + " from " + group);			
+			System.err.println("Exception while running test " + description + " from " + group);
 		}
-	}	
+	}
 }

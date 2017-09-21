@@ -1,4 +1,4 @@
-package testmjson;
+package mjson;
 
 import java.net.URL;
 import java.util.Collection;
@@ -16,9 +16,9 @@ public class TU
         S.addAll(C);
         return S;
     }
-    
+
 	public static URL resource(String location)
 	{
 		return TU.class.getResource(location);
-	}   
+	}
 }

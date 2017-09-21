@@ -1,6 +1,5 @@
-package testmjson;
+package mjson;
 
-import mjson.Json;
 import static mjson.Json.*;
 
 import org.junit.Assert;

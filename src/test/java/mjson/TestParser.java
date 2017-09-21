@@ -1,4 +1,4 @@
-package testmjson;
+package mjson;
 
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
@@ -6,7 +6,6 @@ import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.Assert;
-import mjson.Json;
 
 public class TestParser
 {
@@ -42,7 +41,7 @@ public class TestParser
 		Assert.assertEquals(Json.make(true), Json.read("true"));
 		Assert.assertEquals(Json.make(false), Json.read("false"));
 	}
-	
+
 	@Test
 	public void parseArrays()
 	{
@@ -50,15 +49,15 @@ public class TestParser
 		Assert.assertEquals(Json.array(1,2,3), Json.read("[1,2,3]"));
 		Assert.assertEquals(Json.array(10.3,"blabla", true), Json.read("[10.3,  \"blabla\", true]"));
 	}
-	
+
 	@Test
 	public void parseObjects()
 	{
 		Assert.assertEquals(Json.object(), Json.read("{}"));
-		Assert.assertEquals(Json.object("one", 1, "maybe", false, "nothing", null), 
+		Assert.assertEquals(Json.object("one", 1, "maybe", false, "nothing", null),
 							Json.read("\t{\"one\":1, \t    \"maybe\":false , \n\n\"nothing\"    :     null} "));
 	}
-	
+
 	@Test
 	public void parseSomeDeepStructures()
 	{
@@ -67,7 +66,7 @@ public class TestParser
 		j1.at("doc").at("content").at(0).is("type", "discourseContainer");
 		Assert.assertEquals(Json.array(Json.object(), Json.object("x", null), null), Json.read("[{},{\"x\":null},null]"));
 	}
-	
+
 	public static void main(String [] argv)
 	{
 		JUnitCore junit = new JUnitCore();
@@ -81,6 +80,6 @@ public class TestParser
 			}
 		}
 		System.exit(0);
-		
+
 	}
 }
