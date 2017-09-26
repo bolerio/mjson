@@ -1111,7 +1111,7 @@ public class Json implements java.io.Serializable
         
     public static class DefaultFactory implements Factory
     {
-        public Json nil() { return Json.topnull; }
+        public Json nil() { return new NullJson(); }
         public Json bool(boolean x) { return new BooleanJson(x ? Boolean.TRUE : Boolean.FALSE, null); }
         public Json string(String x) { return new StringJson(x, null); }
         public Json number(Number x) { return new NumberJson(x, null); }
@@ -1120,7 +1120,7 @@ public class Json implements java.io.Serializable
         public Json make(Object anything) 
         { 
             if (anything == null)
-                return topnull;
+                return nil();
             else if (anything instanceof Json)
                 return (Json)anything;
             else if (anything instanceof String)
@@ -1868,8 +1868,6 @@ public class Json implements java.io.Serializable
 		}
 	}
 	
-	static NullJson topnull = new NullJson();
-
 	/**
 	 * <p>
 	 * Set the parent (i.e. enclosing element) of Json element.   
