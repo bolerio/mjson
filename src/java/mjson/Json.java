@@ -1425,7 +1425,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * @return the <code>Json</code> entity, if any, enclosing this 
 	 * <code>Json</code>. The returned value can be <code>null</code> or
 	 * a <code>Json</code> object or list, but not one of the primitive types.
-	 */
+	 * @deprecated This method is both problematic and rarely if every used and
+	 * it will be removed in 2.0. 
+	 */	
 	public final Json up() { return enclosing; }
 	
 	/**
