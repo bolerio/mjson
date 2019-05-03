@@ -250,7 +250,7 @@ import java.util.regex.Pattern;
  * 	   System.out.println("Validation error " + err);
  * </code></pre>
  * @author Borislav Iordanov
- * @version 1.4
+ * @version 1.4.2
  */
 public class Json implements java.io.Serializable
 {
@@ -1392,6 +1392,7 @@ public class Json implements java.io.Serializable
 	 * @return the <code>Json</code> entity, if any, enclosing this 
 	 * <code>Json</code>. The returned value can be <code>null</code> or
 	 * a <code>Json</code> object or list, but not one of the primitive types.
+	 * @deprecated This method is problematic and underused and it will be soon removed.
 	 */
 	public final Json up() { return enclosing; }
 	
