@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1075,7 +1076,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
     			this.theschema = expandReferences(this.theschema, 
     											  this.theschema, 
     											  this.uri, 
-    											  new HashMap<String, Json>(), 
+    											  new LinkedHashMap<String, Json>(), 
     											  new IdentityHashMap<Json, Json>(),
     											  relativeReferenceResolver);
     		}
@@ -2347,7 +2348,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	{
 		private static final long serialVersionUID = 1L;
 		
-		Map<String, Json> object = new HashMap<String, Json>();
+		Map<String, Json> object = new LinkedHashMap<String, Json>();
 
 		@Override
 		public Iterator<Json> iterator() {
@@ -2460,7 +2461,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public boolean isObject() { return true; }
 		public Map<String, Object> asMap() 
 		{
-			HashMap<String, Object> m = new HashMap<String, Object>();
+			HashMap<String, Object> m = new LinkedHashMap<String, Object>();
 			for (Map.Entry<String, Json> e : object.entrySet())
 				m.put(e.getKey(), e.getValue().getValue());
 			return m; 
