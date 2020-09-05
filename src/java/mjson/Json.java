@@ -84,7 +84,7 @@ import java.util.regex.Pattern;
  * <code>Json</code> instances:
  * </p>
  *  
- * <table>
+ * <table summary="Factory static methods.">
  * <tr><td>{@link #read(String)}</td>
  * <td>Parse a JSON string and return the resulting <code>Json</code> instance. The syntax
  * recognized is as defined in <a href="http://www.json.org">http://www.json.org</a>.
@@ -392,7 +392,6 @@ public class Json implements java.io.Serializable
      *  <li>http://spacetelescope.github.io/understanding-json-schema/ - 
      *  online book, tutorial (Python/Ruby based)</li>
      *  </ul>
-     *  </p>
      * @author Borislav Iordanov
      *
      */
@@ -1306,7 +1305,7 @@ public class Json implements java.io.Serializable
 	
 	/**
 	 * <p>
-	 * Exposes some internal methods that are useful for {@link org.sharegov.mjson.Json.Factory} implementations
+	 * Exposes some internal methods that are useful for {@link Json.Factory} implementations
 	 * or other extension/layers of the library.
 	 * </p>
 	 * 
@@ -1317,7 +1316,7 @@ public class Json implements java.io.Serializable
 	{
 		/**
 		 * <p>
-		 * Perform JSON escaping so that ", <, >, etc. characters are properly encoded in the 
+		 * Perform JSON escaping so that &quot;, &lt;, &gt;, etc. characters are properly encoded in the 
 		 * JSON string representation before returning to the client code. This is useful when
 		 * serializing property names or string values.
 		 * </p>
@@ -1419,7 +1418,7 @@ public class Json implements java.io.Serializable
 	 * Return the specified property of a <code>Json</code> object or <code>null</code>
 	 * if there's no such property. This method applies only to Json objects.  
 	 * </p>
-	 * @param The property name.
+	 * @param property The property name.
 	 * @return The JSON element that is the value of that property.
 	 */
 	public Json at(String property)	{ throw new UnsupportedOperationException(); }
@@ -1433,6 +1432,8 @@ public class Json implements java.io.Serializable
 	 * 
 	 * @param property The property to return.
 	 * @param def The default value to set and return in case the property doesn't exist.
+	 * @return The JSON element that is the value of that property or the <code>def</code>
+	 * parameter if the value does not exist. 
 	 */
 	public final Json at(String property, Json def)	
 	{
@@ -1455,6 +1456,7 @@ public class Json implements java.io.Serializable
 	 * 
 	 * @param property The property to return.
 	 * @param def The default value to set and return in case the property doesn't exist.
+	 * @return The JSON element that is the value of that property or <Code>def</code>. 
 	 */
 	public final Json at(String property, Object def)
 	{
