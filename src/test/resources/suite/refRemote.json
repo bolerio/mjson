@@ -1,7 +1,7 @@
 [
     {
         "description": "remote ref",
-        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/master/remotes/integer.json"},
+        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/integer.json"},
         "tests": [
             {
                 "description": "remote ref valid",
@@ -17,7 +17,7 @@
     },
     {
         "description": "fragment within remote ref",
-        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/master/remotes/subSchemas.json#/integer"},
+        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/subSchemas.json#/definitions/integer"},
         "tests": [
             {
                 "description": "remote fragment valid",
@@ -34,7 +34,7 @@
     {
         "description": "ref within remote ref",
         "schema": {
-            "$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/master/remotes/subSchemas.json#/refToInteger"
+            "$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/subSchemas.json#/definitions/refToInteger"
         },
         "tests": [
             {
@@ -50,26 +50,25 @@
         ]
     },
     {
-        "description": "change resolution scope",
+        "description": "base URI change",
         "schema": {
-            "id": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/master/remotes/",
+            "id": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/",
             "items": {
-                "id": "folder/",
+                "id": "baseUriChange/",
                 "items": {"$ref": "folderInteger.json"}
             }
         },
         "tests": [
             {
-                "description": "changed scope ref valid",
+                "description": "base URI change ref valid",
                 "data": [[1]],
                 "valid": true
             },
             {
-                "description": "changed scope ref invalid",
+                "description": "base URI change ref invalid",
                 "data": [["a"]],
                 "valid": false
             }
         ]
     }
 ]
-
