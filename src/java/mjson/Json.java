@@ -84,7 +84,8 @@ import java.util.regex.Pattern;
  * <code>Json</code> instances:
  * </p>
  *  
- * <table summary="Factory static methods.">
+ * <table>
+ * <caption>Factory static methods</caption>
  * <tr><td>{@link #read(String)}</td>
  * <td>Parse a JSON string and return the resulting <code>Json</code> instance. The syntax
  * recognized is as defined in <a href="http://www.json.org">http://www.json.org</a>.
@@ -414,6 +415,7 @@ public class Json implements java.io.Serializable
     	
     	/**
     	 * <p>Return the JSON representation of the schema.</p>
+			 * @return the JSON representation of the schema.
     	 */
     	Json toJson();
     	
@@ -1320,6 +1322,8 @@ public class Json implements java.io.Serializable
 		 * JSON string representation before returning to the client code. This is useful when
 		 * serializing property names or string values.
 		 * </p>
+		 * @param string The string to escape so it can be used in a JSON serialization.
+		 * @return the escaped string.
 		 */
 		public static String escape(String string) { return escaper.escapeJsonString(string); }
 		
@@ -1328,6 +1332,10 @@ public class Json implements java.io.Serializable
 		 * Given a JSON Pointer, as per RFC 6901, return the nested JSON value within
 		 * the <code>element</code> parameter.
 		 * </p>
+		 * @param pointer The pointer in string format.
+		 * @param element The top-level element used to resolve the pointer.
+		 * @return The JSON element to which the pointer resolves or <code>null</code> if
+		 * the pointer does not resolve to anything.
 		 */
 		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
@@ -1470,6 +1478,9 @@ public class Json implements java.io.Serializable
 	 * </p>
 	 * 
 	 * @param property The name of the property.
+	 * @return <code>true</code> if this is JSON object which has the specified property 
+	 * and <code>false</code> if it is a JSON object which does NOT have that property.
+	 * @throws UnsupportedOperationException if this is not a JSON object.
 	 */
 	public boolean has(String property)	{ throw new UnsupportedOperationException(); }
 	
@@ -1483,7 +1494,9 @@ public class Json implements java.io.Serializable
 	 * @param value The value to compare with. Comparison is done via the equals method. 
 	 * If the value is not an instance of <code>Json</code>, it is first converted to
 	 * such an instance. 
-	 * @return
+	 * @return if this is a JSON object and it has the specified property <code>.equals</code>
+	 * to the specified <code>value</code>. 
+	 * @throws UnsupportedOperationException if this is not a JSON object.
 	 */
 	public boolean is(String property, Object value) { throw new UnsupportedOperationException(); }
 
@@ -1498,7 +1511,9 @@ public class Json implements java.io.Serializable
      * @param value The value to compare with. Comparison is done via the equals method. 
      * If the value is not an instance of <code>Json</code>, it is first converted to
      * such an instance. 
-     * @return
+		 * @return if this is a JSON array and it has the specified element at <code>index</code>
+		 * which <code>.equals</code> to the specified <code>value</code>. 
+		 * @throws UnsupportedOperationException if this is not a JSON array.
      */
     public boolean is(int index, Object value) { throw new UnsupportedOperationException(); }
 	
@@ -1507,7 +1522,9 @@ public class Json implements java.io.Serializable
 	 * Add the specified <code>Json</code> element to this array. 
 	 * </p>
 	 * 
+	 * @param el The JSON element to add to this array.
 	 * @return this
+	 * @throws UnsupportedOperationException if this is not a JSON array.
 	 */
 	public Json add(Json el) { throw new UnsupportedOperationException(); }
 	
@@ -1636,8 +1653,13 @@ public class Json implements java.io.Serializable
 	public Json with(Json object, Json[]options) { throw new UnsupportedOperationException(); }
 
     /**
-     * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
+     * Same as <code>{@link #with(Json,Json...options)}</code> with each option
      * argument converted to <code>Json</code> first.
+		 * @param object the other JSON object the properties of which will be stored into
+		 * this object, overwriting any existing properties with conflicting names.
+		 * @param options a set of options, as arbitrary Java objects, converted
+		 * to JSON via the {@link #make(Object)} method.
+		 * @return <code>this</code>
      */
     public Json with(Json object, Object...options)
     {
