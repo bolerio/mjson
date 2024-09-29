@@ -67,6 +67,41 @@ public class TestParser
 		j1.at("doc").at("content").at(0).is("type", "discourseContainer");
 		Assert.assertEquals(Json.array(Json.object(), Json.object("x", null), null), Json.read("[{},{\"x\":null},null]"));
 	}
+
+	@Test
+	public void testLimitedNestingParseError()
+	{
+        int nesting = 9999;
+        String open = "{"; 
+        String close = "}";
+        String content = "0";
+
+		StringBuilder sb = new StringBuilder(nesting * (open.length() + close.length()));
+		for (int i = 0; i < nesting; ++i) {
+			sb.append(open);
+			if ((i & 31) == 0) {
+			    sb.append("\n");
+			}
+		}
+		sb.append("\n").append(content).append("\n");
+		for (int i = 0; i < nesting; ++i) {
+		    sb.append(close);
+		    if ((i & 31) == 0) {
+		        sb.append("\n");
+		    }
+		}
+		
+        String badjson = sb.toString();
+
+        try {
+            Json.read(badjson);
+        }
+        catch (Throwable t) {
+            //System.err.println(t.toString());
+            Assert.assertTrue(t.toString().contains(
+                "While parsing JSON, maximum depth of 1000 exceeded."));
+        }
+	}
 	
 	public static void main(String [] argv)
 	{

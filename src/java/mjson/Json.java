@@ -2707,7 +2707,7 @@ public class Json implements java.io.Serializable
 	        		c = it.next();
 	        		break;
 	        }
-	        return read();
+	        return read(0);
 	    }
 
 	    public Object read(CharacterIterator it) 
@@ -2726,19 +2726,25 @@ public class Json implements java.io.Serializable
 	    		throw new MalformedJsonException("Expected " + expectedToken + ", but got " + actual + " instead");
 	    }
 	    
+		private static int MAX_DEPTH_ALLOWED = 1000;
+
 	    @SuppressWarnings("unchecked")
-		private <T> T read() 
+		private <T> T read(int depth) 
 	    {
+            if (depth > MAX_DEPTH_ALLOWED) {
+			    throw new RuntimeException("While parsing JSON, maximum depth of " +
+                    MAX_DEPTH_ALLOWED + " exceeded.");
+			}
 	        skipWhiteSpace();
 	        char ch = c;
 	        next();
 	        switch (ch) 
 	        {
 	            case '"': token = readString(); break;
-	            case '[': token = readArray(); break;
+	            case '[': token = readArray(depth + 1); break;
 	            case ']': token = ARRAY_END; break;
 	            case ',': token = COMMA; break;
-	            case '{': token = readObject(); break;
+	            case '{': token = readObject(depth + 1); break;
 	            case '}': token = OBJECT_END; break;
 	            case ':': token = COLON; break;
 	            case 't':
@@ -2769,9 +2775,9 @@ public class Json implements java.io.Serializable
 	        return (T)token;
 	    }
 	    
-	    private String readObjectKey()
+	    private String readObjectKey(int depth)
 	    {
-	    	Object key = read();
+	    	Object key = read(depth);
 	    	if (key == null)
                 throw new MalformedJsonException("Missing object key (don't forget to put quotes!).");
 	    	else if (key == OBJECT_END)
@@ -2782,19 +2788,19 @@ public class Json implements java.io.Serializable
 	    		return ((Json)key).asString();
 	    }
 	    
-	    private Json readObject() 
+	    private Json readObject(int depth) 
 	    {
 	        Json ret = object();
-	        String key = readObjectKey();
+	        String key = readObjectKey(depth);
 	        while (token != OBJECT_END) 
 	        {	        	
-	            expected(COLON, read()); // should be a colon
+	            expected(COLON, read(depth)); // should be a colon
 	            if (token != OBJECT_END) 
 	            {
-	            	Json value = read();
+	            	Json value = read(depth + 1);
 	                ret.set(key, value);
-	                if (read() == COMMA) {
-	                    key = readObjectKey();
+	                if (read(depth) == COMMA) {
+	                    key = readObjectKey(depth);
 	                    if (key == null || PUNCTUATION.contains(key))
 	                    	throw new MalformedJsonException("Expected a property name, but found: " + key);
 	                }
@@ -2805,17 +2811,17 @@ public class Json implements java.io.Serializable
 	        return ret;
 	    }
 
-	    private Json readArray() 
+	    private Json readArray(int depth) 
 	    {
 	        Json ret = array();
-	        Object value = read();
+	        Object value = read(depth + 1);
 	        while (token != ARRAY_END) 
 	        {
                 if (PUNCTUATION.contains(value))
                 	throw new MalformedJsonException("Expected array element, but found: " + value);	                	        	
 	            ret.add((Json)value);
-	            if (read() == COMMA) { 
-	                value = read();
+	            if (read(depth) == COMMA) { 
+	                value = read(depth + 1);
 	                if (value == ARRAY_END)
 	                	throw new MalformedJsonException("Expected array element, but found end of array after command.");
 	            }
