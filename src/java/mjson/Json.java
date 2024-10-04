@@ -2797,7 +2797,7 @@ public class Json implements java.io.Serializable
 	            expected(COLON, read(depth)); // should be a colon
 	            if (token != OBJECT_END) 
 	            {
-	            	Json value = read(depth + 1);
+	            	Json value = read(depth);
 	                ret.set(key, value);
 	                if (read(depth) == COMMA) {
 	                    key = readObjectKey(depth);
@@ -2814,14 +2814,14 @@ public class Json implements java.io.Serializable
 	    private Json readArray(int depth) 
 	    {
 	        Json ret = array();
-	        Object value = read(depth + 1);
+	        Object value = read(depth);
 	        while (token != ARRAY_END) 
 	        {
                 if (PUNCTUATION.contains(value))
                 	throw new MalformedJsonException("Expected array element, but found: " + value);	                	        	
 	            ret.add((Json)value);
 	            if (read(depth) == COMMA) { 
-	                value = read(depth + 1);
+	                value = read(depth);
 	                if (value == ARRAY_END)
 	                	throw new MalformedJsonException("Expected array element, but found end of array after command.");
 	            }
