@@ -2941,6 +2941,7 @@ public class Json implements java.io.Serializable
 	}
 	// END Reader
 
+	/*
     public static void main(String []argv)
     {
     	try
@@ -2960,4 +2961,5 @@ public class Json implements java.io.Serializable
     		t.printStackTrace();
     	}
     }
+			*/
 }
