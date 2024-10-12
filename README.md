@@ -1,3 +1,9 @@
+<p align="center">
+    <a href="https://mvnrepository.com/artifact/org.sharegov/mjson" alt="Maven Artifact">
+        <img src="https://img.shields.io/maven-central/v/org.sharegov/mjson" />
+    </a>
+</p>  
+
 mJson is an extremely lightweight Java JSON library with a very concise API. The source code is a single Java file. The license is Apache 2.0. Because of its tiny size, it's well-suited for any application aiming at a small footprint such as mobile/Android applications.
 
 It was originally developed in the context of the [OpenCiRM](https://github.com/sharegov/opencirm) project. There is a graph database based persistent layer for mJson implemented at the [HyperGraphDB Project](http://hypergraphdb.org). This means you can transparently persist and query JSON documents like in document-oriented databases (MongoDB, CouchDB), but you don't have split documents into separate collection or create special purposes indices since all documents and properties are automatically interlinked.
