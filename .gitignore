@@ -1,4 +1,5 @@
-# Maven / Eclipse 
+
+# Maven / Eclipse
 /target/
 .classpath
 .project
@@ -7,3 +8,7 @@
 # Idea
 .idea
 *.iml
+
+# Local Claude instructions
+CLAUDE.local.md
+CLAUDE.md

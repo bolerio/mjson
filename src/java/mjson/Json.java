@@ -251,9 +251,9 @@ import java.util.regex.Pattern;
  * 	   System.out.println("Validation error " + err);
  * </code></pre>
  * @author Borislav Iordanov
- * @version 1.4.2
+ * @version 2.0.0
  */
-public class Json implements java.io.Serializable
+public class Json implements java.io.Serializable, Iterable<Json>
 {
 	private static final long serialVersionUID = 1L;
 
@@ -426,6 +426,20 @@ public class Json implements java.io.Serializable
     	 */
     	//Json generate(Json options);
     }
+
+	@Override
+	public Iterator<Json> iterator() 
+	{
+		return new Iterator<Json>() 
+		{
+			@Override
+			public boolean hasNext() { return false; }
+			@Override
+			public Json next() { return null; }
+			@Override
+			public void remove() { }
+		};
+	}
 
     static String fetchContent(URL url)
     {
@@ -1339,7 +1353,26 @@ public class Json implements java.io.Serializable
 		 */
 		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
-	
+
+	static class JsonSingleValueIterator implements Iterator<Json> {
+		private boolean retrieved = false;
+		@Override
+		public boolean hasNext() {
+			return !retrieved;
+		}
+
+		@Override
+		public Json next() {
+			retrieved = true;
+			return null;
+		}
+
+		@Override
+		public void remove() {
+		}
+	}
+
+
 	/**
 	 * <p>
 	 * Convert an arbitrary Java instance to a {@link Json} instance.   
@@ -1399,8 +1432,9 @@ public class Json implements java.io.Serializable
 	 * @return the <code>Json</code> entity, if any, enclosing this 
 	 * <code>Json</code>. The returned value can be <code>null</code> or
 	 * a <code>Json</code> object or list, but not one of the primitive types.
-	 * @deprecated This method is problematic and underused and it will be soon removed.
-	 */
+	 * @deprecated This method is both problematic and rarely if every used and
+	 * it will be removed in 2.0. 
+	 */	
 	public final Json up() { return enclosing; }
 	
 	/**
@@ -1891,6 +1925,18 @@ public class Json implements java.io.Serializable
 		{
 			return x instanceof NullJson;
 		}
+
+		@Override
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
+				@Override
+				public Json next() {
+					super.next();
+					return NullJson.this;
+				}
+			};
+		}
+
 	}
 	
 	/**
@@ -1959,7 +2005,18 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{
 			return x instanceof BooleanJson && ((BooleanJson)x).val == val;
-		}		
+		}
+		@Override
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
+				@Override
+				public Json next() {
+					super.next();
+					return BooleanJson.this;
+				}
+			};
+		}
+
 	}
 
 	static class StringJson extends Json
@@ -2002,7 +2059,19 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{			
 			return x instanceof StringJson && ((StringJson)x).val.equals(val); 
-		}		
+		}
+
+		@Override
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
+				@Override
+				public Json next() {
+					super.next();
+					return StringJson.this;
+				}
+			};
+		}
+
 	}
 
 	static class NumberJson extends Json
@@ -2034,7 +2103,19 @@ public class Json implements java.io.Serializable
 		public boolean equals(Object x)
 		{			
 			return x instanceof NumberJson && val.doubleValue() == ((NumberJson)x).val.doubleValue(); 
-		}				
+		}
+
+		@Override
+		public Iterator<Json> iterator() {
+			return new JsonSingleValueIterator() {
+				@Override
+				public Json next() {
+					super.next();
+					return NumberJson.this;
+				}
+			};
+		}
+
 	}
 	
 	static class ArrayJson extends Json
@@ -2045,9 +2126,13 @@ public class Json implements java.io.Serializable
 		
 		ArrayJson() { }
 		ArrayJson(Json e) { super(e); }
-		
 
-        public Json dup() 
+		@Override
+		public Iterator<Json> iterator() {
+			return L.iterator();
+		}
+
+		public Json dup()
         { 
             ArrayJson j = new ArrayJson();
             for (Json e : L)
@@ -2285,7 +2370,12 @@ public class Json implements java.io.Serializable
 		private static final long serialVersionUID = 1L;
 		
 		Map<String, Json> object = new HashMap<String, Json>();
-		
+
+		@Override
+		public Iterator<Json> iterator() {
+			return object.values().iterator();
+		}
+
 		ObjectJson() { }
 		ObjectJson(Json e) { super(e); }
 

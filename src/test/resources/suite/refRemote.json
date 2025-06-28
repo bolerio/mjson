@@ -1,7 +1,10 @@
 [
     {
+
+
         "description": "remote ref",
-        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/integer.json"},
+        "schema": {"$ref": "json-schema/JSON-Schema-Test-Suite/develop/remotes/integer.json"},
+
         "tests": [
             {
                 "description": "remote ref valid",
@@ -17,7 +20,7 @@
     },
     {
         "description": "fragment within remote ref",
-        "schema": {"$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/subSchemas.json#/definitions/integer"},
+        "schema": {"$ref": "json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/integer"},
         "tests": [
             {
                 "description": "remote fragment valid",
@@ -34,7 +37,7 @@
     {
         "description": "ref within remote ref",
         "schema": {
-            "$ref": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/subSchemas.json#/definitions/refToInteger"
+            "$ref": "json-schema/JSON-Schema-Test-Suite/develop/remotes/subSchemas.json#/refToInteger"
         },
         "tests": [
             {
@@ -52,7 +55,7 @@
     {
         "description": "base URI change",
         "schema": {
-            "id": "https://raw.githubusercontent.com/json-schema-org/JSON-Schema-Test-Suite/refs/heads/main/remotes/",
+            "id": "json-schema/JSON-Schema-Test-Suite/develop/remotes/",
             "items": {
                 "id": "baseUriChange/",
                 "items": {"$ref": "folderInteger.json"}
