@@ -85,6 +85,7 @@ import java.util.regex.Pattern;
  * </p>
  *  
  * <table>
+ * <caption>Factory static methods</caption>
  * <tr><td>{@link #read(String)}</td>
  * <td>Parse a JSON string and return the resulting <code>Json</code> instance. The syntax
  * recognized is as defined in <a href="http://www.json.org">http://www.json.org</a>.
@@ -392,7 +393,6 @@ public class Json implements java.io.Serializable, Iterable<Json>
      *  <li>http://spacetelescope.github.io/understanding-json-schema/ - 
      *  online book, tutorial (Python/Ruby based)</li>
      *  </ul>
-     *  </p>
      * @author Borislav Iordanov
      *
      */
@@ -415,6 +415,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
     	
     	/**
     	 * <p>Return the JSON representation of the schema.</p>
+			 * @return the JSON representation of the schema.
     	 */
     	Json toJson();
     	
@@ -1125,7 +1126,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
         
     public static class DefaultFactory implements Factory
     {
-        public Json nil() { return Json.topnull; }
+        public Json nil() { return new NullJson(); }
         public Json bool(boolean x) { return new BooleanJson(x ? Boolean.TRUE : Boolean.FALSE, null); }
         public Json string(String x) { return new StringJson(x, null); }
         public Json number(Number x) { return new NumberJson(x, null); }
@@ -1134,7 +1135,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
         public Json make(Object anything) 
         { 
             if (anything == null)
-                return topnull;
+                return nil();
             else if (anything instanceof Json)
                 return (Json)anything;
             else if (anything instanceof String)
@@ -1320,7 +1321,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	
 	/**
 	 * <p>
-	 * Exposes some internal methods that are useful for {@link org.sharegov.mjson.Json.Factory} implementations
+	 * Exposes some internal methods that are useful for {@link Json.Factory} implementations
 	 * or other extension/layers of the library.
 	 * </p>
 	 * 
@@ -1331,10 +1332,12 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	{
 		/**
 		 * <p>
-		 * Perform JSON escaping so that ", <, >, etc. characters are properly encoded in the 
+		 * Perform JSON escaping so that &quot;, &lt;, &gt;, etc. characters are properly encoded in the 
 		 * JSON string representation before returning to the client code. This is useful when
 		 * serializing property names or string values.
 		 * </p>
+		 * @param string The string to escape so it can be used in a JSON serialization.
+		 * @return the escaped string.
 		 */
 		public static String escape(String string) { return escaper.escapeJsonString(string); }
 		
@@ -1343,6 +1346,10 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		 * Given a JSON Pointer, as per RFC 6901, return the nested JSON value within
 		 * the <code>element</code> parameter.
 		 * </p>
+		 * @param pointer The pointer in string format.
+		 * @param element The top-level element used to resolve the pointer.
+		 * @return The JSON element to which the pointer resolves or <code>null</code> if
+		 * the pointer does not resolve to anything.
 		 */
 		public static Json resolvePointer(String pointer, Json element) { return Json.resolvePointer(pointer, element); }
 	}
@@ -1453,7 +1460,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * Return the specified property of a <code>Json</code> object or <code>null</code>
 	 * if there's no such property. This method applies only to Json objects.  
 	 * </p>
-	 * @param The property name.
+	 * @param property The property name.
 	 * @return The JSON element that is the value of that property.
 	 */
 	public Json at(String property)	{ throw new UnsupportedOperationException(); }
@@ -1467,6 +1474,8 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * 
 	 * @param property The property to return.
 	 * @param def The default value to set and return in case the property doesn't exist.
+	 * @return The JSON element that is the value of that property or the <code>def</code>
+	 * parameter if the value does not exist. 
 	 */
 	public final Json at(String property, Json def)	
 	{
@@ -1489,6 +1498,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * 
 	 * @param property The property to return.
 	 * @param def The default value to set and return in case the property doesn't exist.
+	 * @return The JSON element that is the value of that property or <Code>def</code>. 
 	 */
 	public final Json at(String property, Object def)
 	{
@@ -1502,6 +1512,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * </p>
 	 * 
 	 * @param property The name of the property.
+	 * @return <code>true</code> if this is JSON object which has the specified property 
+	 * and <code>false</code> if it is a JSON object which does NOT have that property.
+	 * @throws UnsupportedOperationException if this is not a JSON object.
 	 */
 	public boolean has(String property)	{ throw new UnsupportedOperationException(); }
 	
@@ -1515,7 +1528,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * @param value The value to compare with. Comparison is done via the equals method. 
 	 * If the value is not an instance of <code>Json</code>, it is first converted to
 	 * such an instance. 
-	 * @return
+	 * @return if this is a JSON object and it has the specified property <code>.equals</code>
+	 * to the specified <code>value</code>. 
+	 * @throws UnsupportedOperationException if this is not a JSON object.
 	 */
 	public boolean is(String property, Object value) { throw new UnsupportedOperationException(); }
 
@@ -1530,7 +1545,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
      * @param value The value to compare with. Comparison is done via the equals method. 
      * If the value is not an instance of <code>Json</code>, it is first converted to
      * such an instance. 
-     * @return
+		 * @return if this is a JSON array and it has the specified element at <code>index</code>
+		 * which <code>.equals</code> to the specified <code>value</code>. 
+		 * @throws UnsupportedOperationException if this is not a JSON array.
      */
     public boolean is(int index, Object value) { throw new UnsupportedOperationException(); }
 	
@@ -1539,7 +1556,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 * Add the specified <code>Json</code> element to this array. 
 	 * </p>
 	 * 
+	 * @param el The JSON element to add to this array.
 	 * @return this
+	 * @throws UnsupportedOperationException if this is not a JSON array.
 	 */
 	public Json add(Json el) { throw new UnsupportedOperationException(); }
 	
@@ -1668,8 +1687,13 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	public Json with(Json object, Json[]options) { throw new UnsupportedOperationException(); }
 
     /**
-     * Same as <code>{}@link #with(Json,Json...options)}</code> with each option
+     * Same as <code>{@link #with(Json,Json...options)}</code> with each option
      * argument converted to <code>Json</code> first.
+		 * @param object the other JSON object the properties of which will be stored into
+		 * this object, overwriting any existing properties with conflicting names.
+		 * @param options a set of options, as arbitrary Java objects, converted
+		 * to JSON via the {@link #make(Object)} method.
+		 * @return <code>this</code>
      */
     public Json with(Json object, Object...options)
     {
@@ -1915,8 +1939,6 @@ public class Json implements java.io.Serializable, Iterable<Json>
 
 	}
 	
-	static NullJson topnull = new NullJson();
-
 	/**
 	 * <p>
 	 * Set the parent (i.e. enclosing element) of Json element.   
@@ -2775,7 +2797,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	        		c = it.next();
 	        		break;
 	        }
-	        return read();
+	        return read(0);
 	    }
 
 	    public Object read(CharacterIterator it) 
@@ -2794,19 +2816,25 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	    		throw new MalformedJsonException("Expected " + expectedToken + ", but got " + actual + " instead");
 	    }
 	    
+		private static int MAX_DEPTH_ALLOWED = 1000;
+
 	    @SuppressWarnings("unchecked")
-		private <T> T read() 
+		private <T> T read(int depth) 
 	    {
+            if (depth > MAX_DEPTH_ALLOWED) {
+			    throw new RuntimeException("While parsing JSON, maximum depth of " +
+                    MAX_DEPTH_ALLOWED + " exceeded.");
+			}
 	        skipWhiteSpace();
 	        char ch = c;
 	        next();
 	        switch (ch) 
 	        {
 	            case '"': token = readString(); break;
-	            case '[': token = readArray(); break;
+	            case '[': token = readArray(depth + 1); break;
 	            case ']': token = ARRAY_END; break;
 	            case ',': token = COMMA; break;
-	            case '{': token = readObject(); break;
+	            case '{': token = readObject(depth + 1); break;
 	            case '}': token = OBJECT_END; break;
 	            case ':': token = COLON; break;
 	            case 't':
@@ -2837,9 +2865,9 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	        return (T)token;
 	    }
 	    
-	    private String readObjectKey()
+	    private String readObjectKey(int depth)
 	    {
-	    	Object key = read();
+	    	Object key = read(depth);
 	    	if (key == null)
                 throw new MalformedJsonException("Missing object key (don't forget to put quotes!).");
 	    	else if (key == OBJECT_END)
@@ -2850,19 +2878,19 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	    		return ((Json)key).asString();
 	    }
 	    
-	    private Json readObject() 
+	    private Json readObject(int depth) 
 	    {
 	        Json ret = object();
-	        String key = readObjectKey();
+	        String key = readObjectKey(depth);
 	        while (token != OBJECT_END) 
 	        {	        	
-	            expected(COLON, read()); // should be a colon
+	            expected(COLON, read(depth)); // should be a colon
 	            if (token != OBJECT_END) 
 	            {
-	            	Json value = read();
+	            	Json value = read(depth);
 	                ret.set(key, value);
-	                if (read() == COMMA) {
-	                    key = readObjectKey();
+	                if (read(depth) == COMMA) {
+	                    key = readObjectKey(depth);
 	                    if (key == null || PUNCTUATION.contains(key))
 	                    	throw new MalformedJsonException("Expected a property name, but found: " + key);
 	                }
@@ -2873,17 +2901,17 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	        return ret;
 	    }
 
-	    private Json readArray() 
+	    private Json readArray(int depth) 
 	    {
 	        Json ret = array();
-	        Object value = read();
+	        Object value = read(depth);
 	        while (token != ARRAY_END) 
 	        {
                 if (PUNCTUATION.contains(value))
                 	throw new MalformedJsonException("Expected array element, but found: " + value);	                	        	
 	            ret.add((Json)value);
-	            if (read() == COMMA) { 
-	                value = read();
+	            if (read(depth) == COMMA) { 
+	                value = read(depth);
 	                if (value == ARRAY_END)
 	                	throw new MalformedJsonException("Expected array element, but found end of array after command.");
 	            }
@@ -3003,6 +3031,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	}
 	// END Reader
 
+	/*
     public static void main(String []argv)
     {
     	try
@@ -3022,4 +3051,5 @@ public class Json implements java.io.Serializable, Iterable<Json>
     		t.printStackTrace();
     	}
     }
+			*/
 }

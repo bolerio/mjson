@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "https://json-schema.org/draft-04/schema#",
     "description": "schema for an Service Case question list",
     "items": { "$ref": "#/definitions/ServiceField"},
     "minItems": 1,

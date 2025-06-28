@@ -1,11 +1,12 @@
 package testmjson;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.junit.Assert;
+
 import mjson.Json;
 
 public class TestParser
@@ -66,6 +67,65 @@ public class TestParser
 		j1.is("ok", true);
 		j1.at("doc").at("content").at(0).is("type", "discourseContainer");
 		Assert.assertEquals(Json.array(Json.object(), Json.object("x", null), null), Json.read("[{},{\"x\":null},null]"));
+	}
+
+
+    @Test
+	public void testMaximumObjectNesting()
+    {
+        this.doTestNesting(1000, "{\"x\":",  "}", "0");
+    }
+
+    @Test
+	public void testMaximumArrayNesting()
+    {
+        this.doTestNesting(1000, "[",  "]", "0");
+    }
+
+	private void doTestNesting(int nesting, 
+                               String open, 
+                               String close, 
+                               String content)
+	{
+		StringBuilder bad = new StringBuilder(nesting * (open.length() + close.length()));
+		StringBuilder good = new StringBuilder(nesting * (open.length() + close.length()));
+		for (int i = 0; i < nesting; ++i) {
+			bad.append(open);
+			good.append(open);
+			if ((i & 31) == 0) {
+			    bad.append("\n");
+                good.append("\n");
+			}
+		}
+        // one more for bad
+        bad.append(open).append(" ");
+
+		bad.append("\n").append(content).append("\n");
+        good.append("\n").append(content).append("\n");
+		for (int i = 0; i < nesting; ++i) {
+		    bad.append(close);
+            good.append(close);
+		    if ((i & 31) == 0) {
+		        bad.append("\n");
+                good.append("\n");
+		    }
+		}        
+        // one more for bad
+        bad.append(close).append(" ");
+
+        String badjson = bad.toString();
+        String goodjson = good.toString();
+
+        Json.read(goodjson); // no exception expected
+
+        try {
+            Json.read(badjson);
+			Assert.fail("Should have thrown a max depth reached during parsing error.");
+        }
+        catch (Exception t) {
+            Assert.assertTrue(t.toString().contains(
+                "While parsing JSON, maximum depth of "));
+        }
 	}
 	
 	public static void main(String [] argv)
