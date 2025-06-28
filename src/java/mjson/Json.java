@@ -19,6 +19,8 @@
 package mjson;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
@@ -253,7 +255,7 @@ import java.util.regex.Pattern;
  * @author Borislav Iordanov
  * @version 2.0.0
  */
-public class Json implements java.io.Serializable, Iterable<Json>
+public abstract class Json implements java.io.Serializable, Iterable<Json>
 {
 	private static final long serialVersionUID = 1L;
 
@@ -426,6 +428,8 @@ public class Json implements java.io.Serializable, Iterable<Json>
     	 */
     	//Json generate(Json options);
     }
+    
+  public abstract void write(Writer writer) throws IOException;
 
 	@Override
 	public Iterator<Json> iterator() 
@@ -1917,6 +1921,10 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public Object getValue() { return null; }
 		public Json dup() { return new NullJson(); }
 		public boolean isNull() { return true; }
+		public void write(Writer writer) throws IOException 
+		{
+		  writer.write("null");
+		}
 		public String toString() { return "null"; }
 		public List<Object> asList() { return (List<Object>)Collections.singletonList(null); }
 		
@@ -1997,8 +2005,11 @@ public class Json implements java.io.Serializable, Iterable<Json>
         public Json dup() { return new BooleanJson(val, null); }		
 		public boolean asBoolean() { return val; }		
 		public boolean isBoolean() { return true;	}		
+		public void write(Writer writer) throws IOException 
+		{
+		  writer.write(val ? "true" : "false");
+		}
 		public String toString() { return val ? "true" : "false"; }
-		
 		@SuppressWarnings("unchecked")
 		public List<Object> asList() { return (List<Object>)(List<?>)Collections.singletonList(val); }
 		public int hashCode() { return val ? 1 : 0; }
@@ -2043,6 +2054,10 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		@SuppressWarnings("unchecked")
 		public List<Object> asList() { return (List<Object>)(List<?>)Collections.singletonList(val); }
 		
+		public void write(Writer writer) throws IOException 
+		{
+		  writer.write('"' + escaper.escapeJsonString(val) + '"');
+		}
 		public String toString()
 		{
 			return '"' + escaper.escapeJsonString(val) + '"'; 
@@ -2054,6 +2069,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			else
 				return '"' + escaper.escapeJsonString(val.subSequence(0,  maxCharacters)) + "...\"";
 		}
+		
 
         public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
@@ -2098,6 +2114,10 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		@SuppressWarnings("unchecked")
 		public List<Object> asList() { return (List<Object>)(List<?>)Collections.singletonList(val); }
 		
+		public void write(Writer writer) throws IOException 
+		{
+		  writer.write(val.toString());
+		}
 		public String toString() { return val.toString(); }
 		public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
@@ -2313,6 +2333,18 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			return this; 
 		}
 		
+		public void write(Writer writer) throws IOException 
+		{
+		  writer.write("[");
+		  for (Iterator<Json> i = L.iterator(); i.hasNext(); )
+		  {
+		    Json value = i.next();
+		    value.write(writer);
+		    if (i.hasNext())
+		      writer.write(",");
+		  }     
+		  writer.write("]"); 
+		}
 		public String toString()
 		{
 			return toString(Integer.MAX_VALUE);
@@ -2322,6 +2354,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		{
 			return toStringImpl(maxCharacters, new IdentityHashMap<Json, Json>());
 		}
+		
 		
 		String toStringImpl(int maxCharacters, Map<Json, Json> done)
 		{
@@ -2490,6 +2523,25 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		@Override
 		public Map<String, Json> asJsonMap() { return object; }
 		
+    public void write(Writer writer) throws IOException 
+    {
+      writer.write("{");
+      for (Iterator<Map.Entry<String, Json>> i = object.entrySet().iterator(); i.hasNext(); )
+      {
+        Map.Entry<String, Json> entry  = i.next();
+        String key = entry.getKey();
+        Json value = entry.getValue();
+        writer.append('"');       
+        writer.append(escaper.escapeJsonString(key));
+        writer.write('"');
+        writer.write(":");
+        value.write(writer);
+        if (i.hasNext())
+          writer.write(",");
+      }
+      writer.write("}");
+    }
+		
 		public String toString()
 		{
 			return toString(Integer.MAX_VALUE);
@@ -2530,6 +2582,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			sb.append("}");
 			return sb.toString();
 		}
+		
 		public int hashCode() { return object.hashCode(); }
 		public boolean equals(Object x)
 		{			
