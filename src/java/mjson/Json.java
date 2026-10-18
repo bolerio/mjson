@@ -1401,8 +1401,51 @@ public class Json implements java.io.Serializable, Iterable<Json>
 
 	Json enclosing = null;
 	
+	/**
+	 * <p>
+	 * Applications may subclass <code>Json</code> with their own implementations of objects, arrays
+	 * or primitives, and mix them freely with the elements of this library. Such implementations
+	 * must compare and hash by kind and content, as this library's elements do: an object is equal
+	 * to any <code>Json</code> for which <code>isObject()</code> is true and whose
+	 * <code>asJsonMap()</code> is equal to its own, and its hash code is the hash code of that map;
+	 * likewise arrays with <code>isArray()</code>/<code>asJsonList()</code>, strings with
+	 * <code>isString()</code>/<code>asString()</code> (hash code of the string), numbers with
+	 * <code>isNumber()</code>/<code>asDouble()</code> (<code>Double.hashCode</code> of the value),
+	 * booleans (hash code 1 or 0) and null (hash code 0). Their JSON text is produced by their own
+	 * <code>toString(int)</code>.
+	 * </p>
+	 */
 	protected Json() { }
 	protected Json(Json enclosing) { this.enclosing = enclosing; }
+
+	/**
+	 * <p>
+	 * Merge <code>other</code> into this element as part of {@link #with(Json, Json...)} with the
+	 * <code>merge</code> option, when this element is the value of a property being merged. The
+	 * options for this element are found in <code>allOptions</code> under <code>path</code>. This
+	 * library's objects and arrays implement it; other implementations that support merging must
+	 * override it. The default throws <code>UnsupportedOperationException</code>.
+	 * </p>
+	 */
+	protected Json withOptions(Json other, Json allOptions, String path)
+	{
+		throw new UnsupportedOperationException("Merging into " + getClass().getName() + " is not supported.");
+	}
+
+	/**
+	 * The JSON text of an element nested in an object or array of this library. This library's
+	 * objects and arrays share the set of containers already printed, to cut cycles; other
+	 * implementations produce their own text.
+	 */
+	static String elementToString(Json value, int maxCharacters, Map<Json, Json> done)
+	{
+		if (value instanceof ObjectJson)
+			return ((ObjectJson)value).toStringImpl(maxCharacters, done);
+		else if (value instanceof ArrayJson)
+			return ((ArrayJson)value).toStringImpl(maxCharacters, done);
+		else
+			return value.toString(maxCharacters);
+	}
 	
 	/**
 	 * <p>Return a string representation of <code>this</code> that does 
@@ -1923,7 +1966,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public int hashCode() { return 0; }
 		public boolean equals(Object x)
 		{
-			return x instanceof NullJson;
+			return x instanceof Json && ((Json)x).isNull();
 		}
 
 		@Override
@@ -1972,13 +2015,15 @@ public class Json implements java.io.Serializable, Iterable<Json>
 	 */
 	static void removeParent(Json el, Json parent)
 	{
+		if (el == null)
+			return;
 		if (el.enclosing == parent)
 			el.enclosing = null;
-		else if (el.enclosing.isArray())
+		else if (el.enclosing instanceof ParentArrayJson)
 		{
 			ArrayJson A = (ArrayJson)el.enclosing;
 			int idx = 0;
-			while (A.L.get(idx) != parent && idx < A.L.size()) idx++;
+			while (idx < A.L.size() && A.L.get(idx) != parent) idx++;
 			if (idx < A.L.size())
 				A.L.remove(idx);
 		}
@@ -2004,7 +2049,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public int hashCode() { return val ? 1 : 0; }
 		public boolean equals(Object x)
 		{
-			return x instanceof BooleanJson && ((BooleanJson)x).val == val;
+			return x instanceof Json && ((Json)x).isBoolean() && ((Json)x).asBoolean() == val;
 		}
 		@Override
 		public Iterator<Json> iterator() {
@@ -2058,7 +2103,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
         public int hashCode() { return val.hashCode(); }
 		public boolean equals(Object x)
 		{			
-			return x instanceof StringJson && ((StringJson)x).val.equals(val); 
+			return x instanceof Json && ((Json)x).isString() && val.equals(((Json)x).asString()); 
 		}
 
 		@Override
@@ -2099,10 +2144,11 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public List<Object> asList() { return (List<Object>)(List<?>)Collections.singletonList(val); }
 		
 		public String toString() { return val.toString(); }
-		public int hashCode() { return val.hashCode(); }
+		// Numbers are equal when their double values are, so they hash by their double value.
+		public int hashCode() { return Double.hashCode(val.doubleValue()); }
 		public boolean equals(Object x)
 		{			
-			return x instanceof NumberJson && val.doubleValue() == ((NumberJson)x).val.doubleValue(); 
+			return x instanceof Json && ((Json)x).isNumber() && val.doubleValue() == ((Json)x).asDouble(); 
 		}
 
 		@Override
@@ -2232,7 +2278,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
                 throw new IllegalArgumentException("Compare by options should be either a property name or an array of property names: " + fields);
         }
 
-        Json withOptions(Json array, Json allOptions, String path)
+        protected Json withOptions(Json array, Json allOptions, String path)
         {
             Json opts = allOptions.at(path, object());
             boolean dup = opts.is("dup", true);
@@ -2293,7 +2339,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			else
 				// what about "enclosing" here? we don't have a provision where a Json 
 				// element belongs to more than one enclosing elements...
-				L.addAll(((ArrayJson)object).L);
+				L.addAll(object.asJsonList());
 			return this;
 		}
 		
@@ -2329,9 +2375,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 			for (Iterator<Json> i = L.iterator(); i.hasNext(); )
 			{
 				Json value = i.next();
-				String s = value.isObject() ? ((ObjectJson)value).toStringImpl(maxCharacters, done)
-							: value.isArray() ? ((ArrayJson)value).toStringImpl(maxCharacters, done)
-							: value.toString(maxCharacters);
+				String s = elementToString(value, maxCharacters, done);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				else
@@ -2351,7 +2395,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public int hashCode() { return L.hashCode(); }
 		public boolean equals(Object x)
 		{			
-			return x instanceof ArrayJson && ((ArrayJson)x).L.equals(L); 
+			return x instanceof Json && ((Json)x).isArray() && L.equals(((Json)x).asJsonList()); 
 		}		
 	}
 	
@@ -2421,10 +2465,8 @@ public class Json implements java.io.Serializable, Iterable<Json>
                 for (Map.Entry<String, Json> e : other.asJsonMap().entrySet())
                 {
                     Json local = object.get(e.getKey());
-                    if (local instanceof ObjectJson)
-                        ((ObjectJson)local).withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
-                    else if (local instanceof ArrayJson)
-                        ((ArrayJson)local).withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
+                    if (local != null && (local.isObject() || local.isArray()))
+                        local.withOptions(e.getValue(), allOptions, path + "/" + e.getKey());
                     else
                         set(e.getKey(), duplicate ? e.getValue().dup() : e.getValue());
                 }
@@ -2513,9 +2555,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 				sb.append(escaper.escapeJsonString(x.getKey()));
 				sb.append('"');
 				sb.append(":");
-				String s = x.getValue().isObject() ? ((ObjectJson)x.getValue()).toStringImpl(maxCharacters, done)
-								: x.getValue().isArray() ? ((ArrayJson)x.getValue()).toStringImpl(maxCharacters, done) 
-								: x.getValue().toString(maxCharacters);
+				String s = elementToString(x.getValue(), maxCharacters, done);
 				if (sb.length() + s.length() > maxCharacters)
 					s = s.substring(0, Math.max(0, maxCharacters - sb.length()));
 				sb.append(s);
@@ -2533,7 +2573,7 @@ public class Json implements java.io.Serializable, Iterable<Json>
 		public int hashCode() { return object.hashCode(); }
 		public boolean equals(Object x)
 		{			
-			return x instanceof ObjectJson && ((ObjectJson)x).object.equals(object); 
+			return x instanceof Json && ((Json)x).isObject() && object.equals(((Json)x).asJsonMap()); 
 		}				
 	}
 	
